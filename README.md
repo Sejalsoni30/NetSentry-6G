@@ -1,111 +1,124 @@
-# ShiftGuard-6G: Network Reliability Observatory
+# ShiftGuard-6G: AI Network Prediction Stress-Testing Benchmark
 
-A single-page, scroll-driven, cinematic 3D showcase website for **ShiftGuard-6G** — a research benchmark for stress-testing AI network predictions under compound shifts and incomplete telemetry.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Style: Typed](https://img.shields.io/badge/typing-strict-blue.svg)](https://docs.python.org/3/library/typing.html)
+[![Benchmark Status](https://img.shields.io/badge/status-simulated%20benchmark-cyan.svg)](#limitations)
 
-> **Research Posture**: This is a showcase and design benchmark project. All telemetry and experimental figures are simulated/illustrative and explicitly labeled as such.
+A reproducible stress-testing benchmark that measures when AI-based network predictions become unreliable under compound wireless shifts (traffic surge, mobility/handovers, radio interference) and incomplete telemetry.
 
----
+Includes:
+1. **Python ML & Reliability Benchmark Suite** (Synthetic Scenario Generator, HistGradientBoosting Baseline, Normalized Split Conformal Prediction, IsolationForest Unfamiliarity Detector, FastAPI Service, Pytest harness).
+2. **Cinematic 3D Web Observatory** (Vite + React 19 + Three.js / R3F + Tailwind CSS single-page scroll showcase).
 
-## 🔬 Core Idea: "Things That Open and Close"
-
-The site is designed as a continuous camera journey through a 3D structural observatory called the **Shift Gate**. Every core concept is revealed by physical opening and closing interactions, driven both by smooth scrolling and direct tactile triggers:
-
-1. **Giant Aperture / Iris Doors**: Mechanical multi-blade irises that rotate and part radially to admit the camera into the corridor and close behind.
-2. **Glass Shutter Panels**: Frosted glass panes that slide apart horizontally on hover or click to reveal live simulated wave schematics, with edge light flares.
-3. **Telemetry Curtain**: A dense array of vertical laser data lines that parts smoothly down the center upon scroll traversal and re-closes on reverse.
-4. **Expandable 3D Chambers**: Modular accordion structures that unfold from flat structural tiles into spatial testing chambers with ease-out-expo physics.
-5. **Six-Door Corridor**: Progressive pneumatic blast doors along a 3D spatial tunnel with dynamic reliability meters (Cyan $\rightarrow$ Amber $\rightarrow$ Red).
+> **Synthetic Notice**: All data, telemetry streams, and experiment outputs are **synthetic and simulated** (`"simulated": true`). No real wireless hardware or proprietary datasets are used.
 
 ---
 
-## 🎨 Visual Identity & Palette
+## 🔬 Core Idea: Compound Shifts & Selective Deferral
 
-- **Near-Black Navy (`#05070D`)**: Deep observatory backdrop with atmospheric fog and subtle film grain.
-- **Electric Cyan (`#22E4FF`)**: Nominal, reliable, and high-confidence regimes.
-- **Amber (`#FFB020`)**: Elevated uncertainty, drift, and compound perturbation warnings.
-- **Signal Red (`#FF3B5C`)**: Critical degradation, telemetry dropouts, and safe abstention deferral.
-- **Typography**: Space Grotesk / Syne display font for headlines; JetBrains Mono for telemetry metrics, timestamps, and parameters.
+Conventional deep learning and gradient boosted models trained on calm, nominal network traces fail silently when exposed to compound disruptions. ShiftGuard-6G evaluates three paradigms:
 
----
-
-## 🛠️ Tech Stack
-
-- **Framework**: Vite + React 19 + TypeScript
-- **3D Engine**: Three.js via `@react-three/fiber` and `@react-three/drei`
-- **Animation & Motion**: GSAP (GreenSock) + ScrollTrigger
-- **Smooth Scroll**: Lenis (`lenis`) for fluid, momentum-based scrolling
-- **Styling**: Tailwind CSS with custom glassmorphism and glow tokens
-- **Icons**: Lucide React
+1. **Approach 1 (Conventional Model)**: `HistGradientBoostingRegressor` with native NaN handling. Emits overconfident point forecasts with zero uncertainty warning.
+2. **Approach 2 (Conformal UQ Model)**: Normalized split conformal prediction with a secondary dispersion model $\hat{\sigma}(x)$, producing locally adaptive prediction intervals guaranteeing $90\%$ in-distribution coverage.
+3. **Approach 3 (Proposed ShiftGuard Method)**: Pairs conformal interval width $W(x)$ with an Isolation Forest epistemic unfamiliarity score $U(x)$, selectively abstaining from predictions when either metric exceeds thresholds tuned strictly on separate validation scenarios.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Python Backend Setup & Usage
 
-### Prerequisites
+### 1. Requirements & Installation
 
-- Node.js `v18+` (tested on Node `v24+`)
-- npm `v9+`
-
-### Installation
+- Python 3.11 or 3.12
+- Recommended: Use a virtual environment
 
 ```bash
-git clone https://github.com/example/shiftguard-6g.git
-cd shiftguard-6g
+# Clone the repository
+git clone https://github.com/Sejalsoni30/NetSentry-6G.git
+cd NetSentry-6G
+
+# Create and activate virtual environment
+python -m venv .venv
+
+# On Windows:
+.venv\Scripts\activate
+# On Linux / macOS:
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Running the Benchmark Suite
+
+Run all 6 experimental regimes across 10 random seeds. Outputs are stored in `results/*.json`:
+
+```bash
+python -m shiftguard.evaluation.run_experiments
+```
+
+This generates:
+- `results/exp1_normal.json` (Baseline normal conditions)
+- `results/exp2_single_shift.json` (Isolated traffic surge)
+- `results/exp3_compound_shift.json` (Traffic surge + noise + handovers)
+- `results/exp4_temporal_drift.json` (Gradual non-stationary parameter drift)
+- `results/exp5_missing_telemetry.json` (30% telemetry dropout with NaNs)
+- `results/exp6_unfamiliar_extreme.json` (Extreme out-of-distribution stress)
+- `results/benchmark_summary.json` (Master multi-paradigm comparison matrix)
+
+### 3. Running Unit Tests
+
+Run the comprehensive 23-test pytest suite:
+
+```bash
+python -m pytest -v
+```
+
+Tests verify:
+- Deterministic seed reproducibility
+- Accurate missing rates and NaN indicators
+- Normal conformal coverage within target ($89.6\% \approx 90.0\%$)
+- Zero test-set leakage during threshold tuning
+- Fast API endpoint JSON responses
+
+### 4. Launching the FastAPI Service
+
+The FastAPI service serves precomputed benchmark results from `results/` without training models on request:
+
+```bash
+uvicorn shiftguard.api.main:app --reload --port 8000
+```
+
+Interactive documentation is available at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+#### Available Endpoints:
+- `GET /health`: Service health and available result files.
+- `GET /scenarios`: Scenario parameter definitions across splits.
+- `GET /results/{experiment}`: Full empirical results for an individual experiment.
+- `GET /compare`: Side-by-side multi-paradigm comparison matrix.
+
+---
+
+## 🌐 3D Web Observatory Frontend
+
+The frontend is a single-page, scroll-driven 3D web experience built with Vite, React 19, Three.js, and Tailwind CSS.
+
+### Running the Frontend
+
+```bash
+# Install frontend dependencies
 npm install
-```
 
-### Local Development
-
-Start the local Vite development server:
-
-```bash
+# Start Vite local development server
 npm run dev
-```
 
-Visit `http://localhost:5173` in your browser.
-
-### Production Build
-
-Create an optimized static bundle in `/dist`:
-
-```bash
+# Build production bundle
 npm run build
 ```
 
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
----
-
-## 🌐 Deployment Guide
-
-### Deploying to Vercel
-
-1. Push your repository to GitHub.
-2. In the Vercel dashboard, click **"Add New Project"** and select the `shiftguard-6g` repository.
-3. Keep the default settings:
-   - **Framework Preset**: Vite
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Click **Deploy**.
-
-### Deploying to GitHub Pages
-
-1. In `vite.config.ts`, ensure `base: './'` is set:
-   ```ts
-   export default defineConfig({
-     base: './',
-     plugins: [react()],
-   });
-   ```
-2. Build the project:
-   ```bash
-   npm run build
-   ```
-3. Deploy the `/dist` directory via GitHub Pages (e.g. using the `gh-pages` npm package or GitHub Actions workflow).
+Visit `http://localhost:5173` to explore the 10 interactive scenes, mechanical aperture irises, shutter panels, and 3D corridor doors.
 
 ---
 
@@ -113,46 +126,52 @@ npm run preview
 
 ```text
 ShiftGuard-6G/
-├── src/
-│   ├── components/
-│   │   ├── sections/          # All 10 section scenes
-│   │   │   ├── HeroSection.tsx
-│   │   │   ├── ProblemSection.tsx
-│   │   │   ├── QuestionSection.tsx
-│   │   │   ├── ChambersSection.tsx
-│   │   │   ├── ExperimentsSection.tsx
-│   │   │   ├── ComparisonSection.tsx
-│   │   │   ├── MetricsSection.tsx
-│   │   │   ├── RoadmapSection.tsx
-│   │   │   ├── StackSection.tsx
-│   │   │   └── FinalSection.tsx
-│   │   ├── CustomCursor.tsx   # Aperture ring cursor
-│   │   ├── Header.tsx         # Fixed HUD with progress counter (01/10)
-│   │   ├── ProgressRail.tsx   # Side quick-jump navigation rail
-│   │   ├── Preloader.tsx      # Closed aperture iris loading sequence
-│   │   └── Footer.tsx         # Research disclaimer & links
-│   ├── scenes/                # 3D Three.js components
-│   │   ├── ObservatoryCanvas.tsx # Canvas, camera rig, lights, fog
-│   │   ├── NetworkLattice.tsx    # Instanced glowing 3D node lattice
-│   │   ├── ShiftGateIris3D.tsx   # Mechanical 3D iris aperture
-│   │   ├── TelemetryCurtain3D.tsx# Vertical parting laser data lines
-│   │   └── CorridorDoors3D.tsx   # Six progressive pneumatic blast doors
-│   ├── hooks/
-│   │   └── useObservatoryStore.tsx # State: activeSection, quality, motion
-│   ├── data/
-│   │   └── content.ts         # Central repository of all site copy & data
-│   ├── App.tsx                # Master orchestration (Lenis + GSAP)
-│   ├── index.css              # Glassmorphism, noise grain, scanlines
-│   └── main.tsx
-├── DESIGN_NOTES.md            # Motion architecture & expansion guide
-└── README.md
+├── shiftguard/                  # Python Backend Package
+│   ├── simulator/
+│   │   └── scenarios.py         # Scenario dataclass & non-linear latency generator
+│   ├── models/
+│   │   └── baseline.py          # HistGradientBoostingRegressor (Approach 1)
+│   ├── reliability/
+│   │   ├── conformal.py         # Normalized Split Conformal Predictor (Approach 2)
+│   │   ├── ood.py               # Isolation Forest Unfamiliarity Detector
+│   │   └── abstain.py           # Combined ShiftGuard Engine (Approach 3)
+│   ├── evaluation/
+│   │   ├── metrics.py           # Multidimensional evaluation metrics
+│   │   └── run_experiments.py   # 10-seed experiment runner across 6 experiments
+│   └── api/
+│       └── main.py              # FastAPI REST endpoints
+├── tests/                       # Complete Pytest test suite (23 tests)
+│   ├── test_simulator.py
+│   ├── test_baseline.py
+│   ├── test_conformal.py
+│   ├── test_abstain.py
+│   ├── test_metrics.py
+│   └── test_api.py
+├── results/                     # Empirical benchmark JSON outputs ("simulated": true)
+│   ├── exp1_normal.json
+│   ├── exp2_single_shift.json
+│   ├── exp3_compound_shift.json
+│   ├── exp4_temporal_drift.json
+│   ├── exp5_missing_telemetry.json
+│   ├── exp6_unfamiliar_extreme.json
+│   └── benchmark_summary.json
+├── src/                         # 3D Web Observatory Frontend (React + Three.js)
+│   ├── components/              # UI sections, cursor, header, preloader
+│   ├── scenes/                  # Three.js 3D canvas, iris, lattice, doors
+│   ├── data/content.ts          # Central website copy
+│   └── hooks/                   # Observatory store
+├── EXPERIMENTS.md               # Detailed experiment protocols & metric definitions
+├── DESIGN_NOTES.md              # 3D motion physics & extension guide
+├── requirements.txt             # Python dependencies
+├── pytest.ini                   # Pytest configuration
+└── package.json                 # Node dependencies
 ```
 
 ---
 
-## 🛡️ Accessibility & Performance
+## ⚠️ Limitations & Scientific Scope
 
-- **Reduce Motion**: Fully honors `prefers-reduced-motion` and features a manual toggle in the header, locking 3D motion and replacing camera travel with calm section transitions.
-- **Quality Toggle**: "High" (full PBR materials, bloom, instanced nodes, particulate dust) vs "Low" (optimized rendering for lower-power devices).
-- **Keyboard Navigation**: All accordions, doors, and interactive shutters are fully operable via `Tab`, `Enter`, and `Space`.
-- **Sound-Free Haptics**: Click and hover interactions deliver instant visual micro-feedback via crisp cyan and amber glow pulses.
+1. **Synthetic Data**: All telemetry features (traffic load, handovers, SINR) and latency targets are synthetically generated from mathematical models rather than live sub-THz / 6G testbeds.
+2. **Simplified Physical Layer**: Channel noise and Doppler effects are modeled using parametric Gaussian and Poisson approximations rather than full ray-tracing electromagnetic simulations (e.g., ns-3 or Sionna).
+3. **Hypothesis Status**: The compound shift vulnerability hypothesis represents a candidate research framework. Real wireless deployments require validation via empirical measurement campaigns.
+4. **Offline Conformal Validity**: Split conformal coverage guarantees hold under exchangeable distributions. Under extreme compound shift, marginal coverage degrades as expected, motivating the active abstention mechanism.
