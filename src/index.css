@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-navy: #05070D;
+    --color-cyan: #22E4FF;
+    --color-amber: #FFB020;
+    --color-red: #FF3B5C;
+  }
+
+  html {
+    scroll-behavior: auto; /* Handled smoothly by Lenis */
+    background-color: #05070D;
+  }
+
+  body {
+    background-color: #05070D;
+    color: #E2E8F0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #05070D;
+}
+::-webkit-scrollbar-thumb {
+  background: #162038;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #22E4FF;
+}
+
+/* Glassmorphism & Edge Glows */
+.glass-panel {
+  background: rgba(8, 12, 23, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(34, 228, 255, 0.14);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-amber {
+  background: rgba(14, 12, 10, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 176, 32, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-red {
+  background: rgba(18, 8, 12, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 59, 92, 0.22);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-pill {
+  background: rgba(22, 32, 56, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 228, 255, 0.2);
+}
+
+/* Edge light flare on doors & shutters */
+.edge-flare-cyan {
+  box-shadow: inset 0 0 15px rgba(34, 228, 255, 0.25), 0 0 15px rgba(34, 228, 255, 0.15);
+}
+.edge-flare-amber {
+  box-shadow: inset 0 0 15px rgba(255, 176, 32, 0.25), 0 0 15px rgba(255, 176, 32, 0.15);
+}
+.edge-flare-red {
+  box-shadow: inset 0 0 15px rgba(255, 59, 92, 0.25), 0 0 15px rgba(255, 59, 92, 0.15);
+}
+
+/* Subtle Film Grain Overlay */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Scanline Effect for network observatory feel */
+.scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.18) 50%,
+    rgba(0, 0, 0, 0.18)
+  );
+  background-size: 100% 4px;
+}
+
+/* Smooth aperture micro-feedback */
+.micro-glow-active {
+  animation: micro-glow 0.4s ease-out forwards;
+}
+
+@keyframes micro-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 228, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 25px 4px rgba(34, 228, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 228, 255, 0);
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
