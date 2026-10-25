@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Path as FastPath
 from fastapi.middleware.cors import CORSMiddleware
 from shiftguard.simulator.scenarios import get_scenario_catalog
@@ -20,7 +20,7 @@ RESULTS_DIR = Path("results")
 app = FastAPI(
     title="ShiftGuard-6G Reliability API",
     description="REST API serving reproducible stress-testing benchmark results for 6G network predictions under compound shifts.",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 # Enable CORS for cross-origin observatory dashboards
@@ -31,6 +31,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _safe_mean(metric_obj: Optional[Dict[str, Any]]) -> Optional[float]:
+    if isinstance(metric_obj, dict):
+        return metric_obj.get("mean")
+    return None
 
 
 @app.get("/health")
@@ -44,7 +50,7 @@ def health_check() -> Dict[str, Any]:
         "status": "healthy",
         "simulated": True,
         "service": "ShiftGuard-6G Reliability API",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "results_directory_exists": RESULTS_DIR.exists(),
         "available_experiments": [f for f in available_files if f != "benchmark_summary"],
         "has_master_summary": (RESULTS_DIR / "benchmark_summary.json").exists(),
@@ -70,11 +76,10 @@ def list_scenarios() -> Dict[str, Any]:
 def get_experiment_results(
     experiment: str = FastPath(
         ...,
-        description="Experiment ID, e.g. exp1_normal, exp2_single_shift, exp3_compound_shift, exp4_temporal_drift, exp5_missing_telemetry, exp6_unfamiliar_extreme",
+        description="Experiment ID, e.g. exp1_normal, exp2_single_shift, exp3_compound_shift, exp4_temporal_drift, exp5_missing_telemetry, exp6_unfamiliar_extreme, exp7_single_matched, exp7_compound_matched",
     )
 ) -> Dict[str, Any]:
     """Retrieve precomputed benchmark results for a specific experiment across all approaches."""
-    # Strip optional .json extension if user passed it
     clean_id = experiment[:-5] if experiment.endswith(".json") else experiment
     file_path = RESULTS_DIR / f"{clean_id}.json"
 
@@ -95,7 +100,7 @@ def get_experiment_results(
 
 @app.get("/compare")
 def compare_approaches() -> Dict[str, Any]:
-    """Compare all three approaches side-by-side across all 6 benchmark experiments."""
+    """Compare all approaches side-by-side across all benchmark experiments."""
     summary_path = RESULTS_DIR / "benchmark_summary.json"
     if not summary_path.exists():
         raise HTTPException(
@@ -109,25 +114,34 @@ def compare_approaches() -> Dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to load summary: {str(exc)}")
 
-    # Construct clean comparative matrix
     comparisons = []
     for exp_id, exp_data in master.get("experiments", {}).items():
         approaches = exp_data.get("approaches", {})
         comparisons.append({
             "experiment_id": exp_id,
             "experiment_name": exp_data.get("experiment_name"),
+            "is_drift_experiment": exp_data.get("is_drift_experiment", False),
             "approaches": {
                 app_id: {
                     "name": app_info.get("name"),
-                    "mae_mean": app_info.get("metrics", {}).get("mae", {}).get("mean"),
-                    "mae_retained_mean": app_info.get("metrics", {}).get("mae_retained", {}).get("mean"),
-                    "coverage_mean": app_info.get("metrics", {}).get("coverage", {}).get("mean"),
-                    "calibration_error_mean": app_info.get("metrics", {}).get("calibration_error", {}).get("mean"),
-                    "abstention_rate_mean": app_info.get("metrics", {}).get("abstention_rate", {}).get("mean"),
-                    "missed_risk_rate_mean": app_info.get("metrics", {}).get("missed_risk_rate", {}).get("mean"),
-                    "false_alarm_rate_mean": app_info.get("metrics", {}).get("false_alarm_rate", {}).get("mean"),
-                    "detection_delay_mean": app_info.get("metrics", {}).get("detection_delay", {}).get("mean"),
-                    "runtime_ms_per_1k": app_info.get("metrics", {}).get("runtime_ms_per_1k", {}).get("mean"),
+                    "mae_mean": _safe_mean(app_info.get("metrics", {}).get("mae")),
+                    "mae_retained_mean": _safe_mean(app_info.get("metrics", {}).get("mae_retained")),
+                    "coverage_mean": _safe_mean(app_info.get("metrics", {}).get("coverage")),
+                    "calibration_error_mean": _safe_mean(app_info.get("metrics", {}).get("calibration_error")),
+                    "interval_width_mean": _safe_mean(app_info.get("metrics", {}).get("interval_width_mean")),
+                    "abstention_rate_mean": _safe_mean(app_info.get("metrics", {}).get("abstention_rate")),
+                    "missed_risk_rate_retained_mean": _safe_mean(app_info.get("metrics", {}).get("missed_risk_rate_retained")),
+                    "missed_risk_rate_inclusive_mean": _safe_mean(app_info.get("metrics", {}).get("missed_risk_rate_inclusive")),
+                    "false_alarm_rate_retained_mean": _safe_mean(app_info.get("metrics", {}).get("false_alarm_rate_retained")),
+                    "false_alarm_rate_inclusive_mean": _safe_mean(app_info.get("metrics", {}).get("false_alarm_rate_inclusive")),
+                    "aurc_mean": _safe_mean(app_info.get("metrics", {}).get("aurc")),
+                    "mae_at_10pct_abstention": _safe_mean(app_info.get("metrics", {}).get("mae_at_10pct_abstention")),
+                    "mae_at_20pct_abstention": _safe_mean(app_info.get("metrics", {}).get("mae_at_20pct_abstention")),
+                    "mae_at_30pct_abstention": _safe_mean(app_info.get("metrics", {}).get("mae_at_30pct_abstention")),
+                    "detection_delay_mean": _safe_mean(app_info.get("metrics", {}).get("detection_delay")),
+                    "base_violation_rate": _safe_mean(app_info.get("metrics", {}).get("base_violation_rate")),
+                    "classification_unreliable": app_info.get("metrics", {}).get("classification_unreliable", False),
+                    "runtime_ms_per_1k": _safe_mean(app_info.get("metrics", {}).get("runtime_ms_per_1k")),
                 }
                 for app_id, app_info in approaches.items()
             }
@@ -135,7 +149,7 @@ def compare_approaches() -> Dict[str, Any]:
 
     return {
         "simulated": True,
-        "title": "ShiftGuard-6G Multi-Paradigm Comparison Matrix",
+        "title": "ShiftGuard-6G Comprehensive Multi-Paradigm Comparison Matrix",
         "n_seeds": master.get("n_seeds"),
         "comparisons": comparisons,
     }

@@ -2,18 +2,24 @@
 
 Computes:
 - Regression quality: MAE, RMSE (both all-sample and retained-sample)
-- Classification quality: Precision, Recall, Macro F1 for QoS violations (latency > 60 ms)
-- Conformal reliability: Empirical Coverage, Calibration Error (|0.90 - Coverage|)
-- Operational warning quality: Abstention Rate, False-Alarm Rate, Missed-Risk Rate
+- Dual classification quality:
+  (a) Retained / Actionable: Evaluated strictly among non-abstained predictions
+  (b) Inclusive / Flagged: Evaluated treating abstentions as positive alerts
+- Conformal reliability: Empirical Coverage, Calibration Error (None for models without intervals)
+- Dual warning quality:
+  (a) Retained: False Alarm and Missed Risk among retained instances
+  (b) Inclusive: False Alarm and Missed Risk where abstention is an active alert
 - Temporal dynamics: Detection Delay in drift scenarios
-- Execution profile: Inference Latency (ms / 1k samples), Memory Peak (MB)
+- Base violation rate and classification unreliability flag (if rate > 0.95 or < 0.05)
+- Risk-coverage curves, AURC, and matched-rate evaluations (10%, 20%, 30%)
+- Computational profile: Runtime (ms/1k), Memory Peak (MB)
 """
 
 from __future__ import annotations
 
 import time
 import tracemalloc
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 import pandas as pd
 from shiftguard.models.baseline import QOS_THRESHOLD_MS
@@ -48,27 +54,61 @@ def compute_regression_metrics(
     return res
 
 
-def compute_classification_metrics(
+def compute_dual_classification_metrics(
     y_true_binary: np.ndarray,
     y_pred_binary: np.ndarray,
     abstain_mask: Optional[np.ndarray] = None,
-) -> Dict[str, float]:
-    """Compute Precision, Recall, and F1 for QoS violation detection."""
-    # When abstaining, an abstention on a true breach counts as protective handling
-    tp = np.sum((y_pred_binary == 1) & (y_true_binary == 1))
-    fp = np.sum((y_pred_binary == 1) & (y_true_binary == 0))
-    fn = np.sum((y_pred_binary == 0) & (y_true_binary == 1))
-    tn = np.sum((y_pred_binary == 0) & (y_true_binary == 0))
+) -> Dict[str, Optional[float]]:
+    """Compute both Retained and Inclusive versions of Precision, Recall, and F1.
+    
+    (a) Retained version: evaluated strictly among samples where the model predicted (not abstained).
+    (b) Inclusive version: abstention is treated as an active violation warning.
+    """
+    if abstain_mask is None:
+        abstain_mask = np.zeros(len(y_true_binary), dtype=bool)
 
-    precision = float(tp / (tp + fp)) if (tp + fp) > 0 else 0.0
-    recall = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
-    f1 = float(2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+    retained = ~abstain_mask
+
+    # Version (a): Retained / Actionable
+    if np.sum(retained) > 0:
+        y_t_ret = y_true_binary[retained]
+        y_p_ret = y_pred_binary[retained]
+        tp_ret = np.sum((y_p_ret == 1) & (y_t_ret == 1))
+        fp_ret = np.sum((y_p_ret == 1) & (y_t_ret == 0))
+        fn_ret = np.sum((y_p_ret == 0) & (y_t_ret == 1))
+
+        prec_ret = float(tp_ret / (tp_ret + fp_ret)) if (tp_ret + fp_ret) > 0 else 0.0
+        rec_ret = float(tp_ret / (tp_ret + fn_ret)) if (tp_ret + fn_ret) > 0 else 0.0
+        f1_ret = float(2 * prec_ret * rec_ret / (prec_ret + rec_ret)) if (prec_ret + rec_ret) > 0 else 0.0
+    else:
+        prec_ret, rec_ret, f1_ret = 0.0, 0.0, 0.0
+
+    # Version (b): Inclusive / Flagged (abstentions treated as positive alerts)
+    y_p_inc = (y_pred_binary == 1) | abstain_mask
+    tp_inc = np.sum((y_p_inc == 1) & (y_true_binary == 1))
+    fp_inc = np.sum((y_p_inc == 1) & (y_true_binary == 0))
+    fn_inc = np.sum((y_p_inc == 0) & (y_true_binary == 1))
+
+    prec_inc = float(tp_inc / (tp_inc + fp_inc)) if (tp_inc + fp_inc) > 0 else 0.0
+    rec_inc = float(tp_inc / (tp_inc + fn_inc)) if (tp_inc + fn_inc) > 0 else 0.0
+    f1_inc = float(2 * prec_inc * rec_inc / (prec_inc + rec_inc)) if (prec_inc + rec_inc) > 0 else 0.0
 
     return {
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
+        "precision_retained": prec_ret,
+        "recall_retained": rec_ret,
+        "f1_retained": f1_ret,
+        "precision_inclusive": prec_inc,
+        "recall_inclusive": rec_inc,
+        "f1_inclusive": f1_inc,
+        # Keep canonical fields pointing to inclusive for backwards compatibility
+        "precision": prec_inc,
+        "recall": rec_inc,
+        "f1": f1_inc,
     }
+
+
+# Backwards compatibility alias
+compute_classification_metrics = compute_dual_classification_metrics
 
 
 def compute_reliability_metrics(
@@ -76,14 +116,17 @@ def compute_reliability_metrics(
     lower: Optional[np.ndarray],
     upper: Optional[np.ndarray],
     nominal_coverage: float = 0.90,
-) -> Dict[str, float]:
-    """Compute empirical coverage, calibration error, and average interval width."""
+) -> Dict[str, Optional[float]]:
+    """Compute empirical coverage, calibration error, and interval width.
+    
+    CRITICAL: For approaches without prediction intervals, returns None (null in JSON).
+    """
     if lower is None or upper is None:
         return {
-            "coverage": 0.0,
-            "calibration_error": nominal_coverage,
-            "interval_width_mean": 0.0,
-            "interval_width_std": 0.0,
+            "coverage": None,
+            "calibration_error": None,
+            "interval_width_mean": None,
+            "interval_width_std": None,
         }
 
     covered = (y_true >= lower) & (y_true <= upper)
@@ -99,47 +142,70 @@ def compute_reliability_metrics(
     }
 
 
-def compute_warning_quality_metrics(
+def compute_dual_warning_quality_metrics(
     y_true: np.ndarray,
     y_pred_binary: np.ndarray,
     abstain_mask: Optional[np.ndarray] = None,
 ) -> Dict[str, float]:
-    """Compute abstention rate, false-alarm rate, and missed-risk rate."""
+    """Compute dual versions of False Alarm Rate and Missed Risk Rate.
+    
+    (a) Retained version: Denominator excludes abstained samples.
+    (b) Inclusive version: Abstention counts as an active warning/flag.
+    """
     actual_violations = y_true > QOS_THRESHOLD_MS
     actual_safe = ~actual_violations
 
     if abstain_mask is None:
         abstain_mask = np.zeros(len(y_true), dtype=bool)
 
+    retained = ~abstain_mask
     abstention_rate = float(np.mean(abstain_mask))
 
-    # False-Alarm Rate: safe outcomes incorrectly alerted or abstained
-    safe_count = int(np.sum(actual_safe))
-    if safe_count > 0:
-        false_alarms = np.sum(actual_safe & ((y_pred_binary == 1) | abstain_mask))
-        false_alarm_rate = float(false_alarms / safe_count)
+    # --- Version (a): Retained (denominator excludes abstained samples) ---
+    safe_retained = actual_safe & retained
+    safe_ret_count = int(np.sum(safe_retained))
+    if safe_ret_count > 0:
+        far_retained = float(np.sum(safe_retained & (y_pred_binary == 1)) / safe_ret_count)
     else:
-        false_alarm_rate = 0.0
+        far_retained = 0.0
 
-    # Missed-Risk Rate: critical breaches that went completely unflagged and unabstained
-    violation_count = int(np.sum(actual_violations))
-    if violation_count > 0:
-        silent_failures = np.sum(actual_violations & (y_pred_binary == 0) & (~abstain_mask))
-        missed_risk_rate = float(silent_failures / violation_count)
+    viol_retained = actual_violations & retained
+    viol_ret_count = int(np.sum(viol_retained))
+    if viol_ret_count > 0:
+        mrr_retained = float(np.sum(viol_retained & (y_pred_binary == 0)) / viol_ret_count)
     else:
-        missed_risk_rate = 0.0
+        mrr_retained = 0.0
+
+    # --- Version (b): Inclusive (abstained counts as flagged/warned) ---
+    safe_total = int(np.sum(actual_safe))
+    if safe_total > 0:
+        far_inclusive = float(np.sum(actual_safe & ((y_pred_binary == 1) | abstain_mask)) / safe_total)
+    else:
+        far_inclusive = 0.0
+
+    viol_total = int(np.sum(actual_violations))
+    if viol_total > 0:
+        # Missed risk occurs ONLY if violation occurred, prediction was 0, AND model did NOT abstain
+        mrr_inclusive = float(np.sum(actual_violations & (y_pred_binary == 0) & (~abstain_mask)) / viol_total)
+    else:
+        mrr_inclusive = 0.0
 
     return {
         "abstention_rate": abstention_rate,
-        "false_alarm_rate": false_alarm_rate,
-        "missed_risk_rate": missed_risk_rate,
+        "false_alarm_rate_retained": far_retained,
+        "missed_risk_rate_retained": mrr_retained,
+        "false_alarm_rate_inclusive": far_inclusive,
+        "missed_risk_rate_inclusive": mrr_inclusive,
+        # Keep canonical fields pointing to inclusive for backwards compatibility
+        "false_alarm_rate": far_inclusive,
+        "missed_risk_rate": mrr_inclusive,
     }
 
 
 def compute_detection_delay(
     is_drift_active: np.ndarray,
     warning_signals: np.ndarray,
-    window_consecutive: int = 4,
+    window_consecutive: int = 3,
 ) -> float:
     """Measure number of time windows between start of physical drift and sustained alert."""
     drift_indices = np.where(is_drift_active == 1)[0]
@@ -147,86 +213,166 @@ def compute_detection_delay(
         return 0.0
 
     drift_start_idx = int(drift_indices[0])
-    total_post_drift = len(is_drift_active) - drift_start_idx
+    total_post_drift = float(len(is_drift_active) - drift_start_idx)
 
-    # Look for first sustained warning window
     for idx in range(drift_start_idx, len(warning_signals) - window_consecutive + 1):
         window = warning_signals[idx : idx + window_consecutive]
         if np.sum(window) == window_consecutive:
             return float(idx - drift_start_idx)
 
-    return float(total_post_drift)
+    return total_post_drift
+
+
+def compute_risk_coverage_curve(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    ranking_scores: np.ndarray,
+    grid_points: int = 19,
+) -> Tuple[List[float], List[float], float]:
+    """Compute error (MAE) of retained predictions vs abstention rate (0% to 90%).
+    
+    Returns:
+        (abstention_rates, retained_maes, aurc)
+    """
+    n = len(y_true)
+    abs_errors = np.abs(y_true - y_pred)
+    
+    # Sort samples by score descending (highest uncertainty/OOD score abstained first)
+    sorted_indices = np.argsort(-ranking_scores)
+    
+    abstention_rates = []
+    retained_maes = []
+    
+    rates = np.linspace(0.0, 0.90, grid_points)
+    for r in rates:
+        n_abstain = int(np.floor(r * n))
+        if n_abstain >= n:
+            n_abstain = n - 1
+        
+        retained_idx = sorted_indices[n_abstain:]
+        mae_at_r = float(np.mean(abs_errors[retained_idx]))
+        
+        abstention_rates.append(float(r))
+        retained_maes.append(mae_at_r)
+
+    # Compute Area Under the Risk-Coverage Curve (trapezoidal integration)
+    if hasattr(np, "trapezoid"):
+        aurc = float(np.trapezoid(retained_maes, abstention_rates))
+    elif hasattr(np, "trapz"):
+        aurc = float(getattr(np, "trapz")(retained_maes, abstention_rates))
+    else:
+        y_arr = np.asarray(retained_maes)
+        x_arr = np.asarray(abstention_rates)
+        aurc = float(np.sum(0.5 * (y_arr[1:] + y_arr[:-1]) * (x_arr[1:] - x_arr[:-1])))
+    return abstention_rates, retained_maes, aurc
+
+
+def compute_matched_rate_mae(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    ranking_scores: np.ndarray,
+    matched_rates: Tuple[float, ...] = (0.10, 0.20, 0.30),
+) -> Dict[str, float]:
+    """Evaluate MAE of retained predictions at exact matched abstention rates."""
+    n = len(y_true)
+    abs_errors = np.abs(y_true - y_pred)
+    sorted_indices = np.argsort(-ranking_scores)
+
+    results = {}
+    for r in matched_rates:
+        n_abstain = int(np.floor(r * n))
+        retained_idx = sorted_indices[n_abstain:]
+        mae_r = float(np.mean(abs_errors[retained_idx]))
+        key = f"mae_at_{int(r * 100)}pct_abstention"
+        results[key] = mae_r
+
+    return results
 
 
 def evaluate_approach_on_dataset(
     approach_name: str,
     pipeline: object,
     df: pd.DataFrame,
-) -> Dict[str, float]:
-    """Run end-to-end evaluation for an approach on a specific dataset.
-    
-    Approaches:
-    - 'approach1_conventional': BaselinePredictor
-    - 'approach2_conformal': NormalizedConformalPredictor
-    - 'approach3_shiftguard': ShiftGuardReliabilityEngine
-    """
+) -> Dict[str, Any]:
+    """Run comprehensive evaluation for any approach or ablation on a dataset."""
     y_true = df["latency"].to_numpy()
     y_true_binary = df["qos_violation"].to_numpy()
     n_samples = len(df)
 
+    base_violation_rate = float(np.mean(y_true_binary))
+    classification_unreliable = bool(base_violation_rate > 0.95 or base_violation_rate < 0.05)
+
     tracemalloc.start()
     t0 = time.perf_counter()
 
+    # Route based on approach type
     if approach_name == "approach1_conventional":
         y_pred = pipeline.predict_latency(df)
         y_pred_bin = pipeline.predict_qos_violation(df)
         lower, upper, widths = None, None, None
         abstain = None
-        warning_signal = y_pred_bin == 1
+        ranking_scores = np.abs(y_pred - 45.0)  # proxy distance from calm median
+        warning_signal = (y_pred_bin == 1)
 
     elif approach_name == "approach2_conformal":
         y_pred, lower, upper, widths = pipeline.predict_intervals(df)
         y_pred_bin = (y_pred > QOS_THRESHOLD_MS).astype(int)
         abstain = None
-        # Approach 2 flags warning if upper bound exceeds threshold
-        warning_signal = upper > QOS_THRESHOLD_MS
+        ranking_scores = widths
+        warning_signal = (upper > QOS_THRESHOLD_MS) | (y_pred_bin == 1)
 
-    elif approach_name == "approach3_shiftguard":
+    else:
+        # ShiftGuard or one of the ablations
         res = pipeline.predict(df)
         y_pred = res["latency_pred"]
-        lower = res["lower"]
-        upper = res["upper"]
-        widths = res["interval_width"]
+        lower = res.get("lower")
+        upper = res.get("upper")
+        widths = res.get("interval_width")
         abstain = res["abstain"]
         y_pred_bin = res["qos_violation_pred"]
-        warning_signal = abstain | (y_pred_bin == 1)
-    else:
-        raise ValueError(f"Unknown approach: {approach_name}")
+        
+        # Use appropriate ranking score for risk-coverage curve
+        if "interval_width" in res and res["interval_width"] is not None:
+            w_norm = res["interval_width"] / (np.mean(res["interval_width"]) + 1e-6)
+            ood_norm = res.get("unfamiliarity_score", np.zeros_like(w_norm))
+            ranking_scores = w_norm + np.maximum(0.0, ood_norm)
+        else:
+            ranking_scores = res.get("unfamiliarity_score", np.zeros_like(y_pred))
+
+        warning_signal = res.get("warning_signal")
+        if warning_signal is None:
+            warning_signal = abstain | (y_pred_bin == 1)
 
     elapsed_sec = time.perf_counter() - t0
     current_mem, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
-    # Time in milliseconds per 1,000 samples
     runtime_ms_per_1k = float((elapsed_sec / max(1, n_samples)) * 1000.0 * 1000.0)
     memory_peak_mb = float(peak_mem / (1024.0 * 1024.0))
 
-    # Compute metric categories
+    # Metric collections
     reg_metrics = compute_regression_metrics(y_true, y_pred, abstain_mask=abstain)
-    cls_metrics = compute_classification_metrics(y_true_binary, y_pred_bin, abstain_mask=abstain)
+    cls_metrics = compute_dual_classification_metrics(y_true_binary, y_pred_bin, abstain_mask=abstain)
     rel_metrics = compute_reliability_metrics(y_true, lower, upper)
-    warn_metrics = compute_warning_quality_metrics(y_true, y_pred_bin, abstain_mask=abstain)
+    warn_metrics = compute_dual_warning_quality_metrics(y_true, y_pred_bin, abstain_mask=abstain)
 
-    metrics = {
+    # Risk-coverage curve and matched-rate comparisons
+    _, _, aurc = compute_risk_coverage_curve(y_true, y_pred, ranking_scores)
+    matched_maes = compute_matched_rate_mae(y_true, y_pred, ranking_scores)
+
+    metrics: Dict[str, Any] = {
         **reg_metrics,
         **cls_metrics,
         **rel_metrics,
         **warn_metrics,
+        **matched_maes,
+        "aurc": aurc,
+        "base_violation_rate": base_violation_rate,
+        "classification_unreliable": classification_unreliable,
         "runtime_ms_per_1k": runtime_ms_per_1k,
         "memory_peak_mb": memory_peak_mb,
     }
 
-    # Add detection delay if drift scenario
     if "is_drift_active" in df.columns:
         delay = compute_detection_delay(df["is_drift_active"].to_numpy(), warning_signal.astype(int))
         metrics["detection_delay"] = delay

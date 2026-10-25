@@ -1,0 +1,1562 @@
+================================================================================
+SHIFTGUARD-6G BENCHMARK EXPERIMENTAL SUMMARY (10 SEEDS MEAN)
+================================================================================
+
+=======================================================
+EXPERIMENT: Normal Conditions
+ID: exp1_normal | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.774
+  rmse                             5.164
+  rmse_retained                    5.164
+  retained_fraction                1.0
+  aurc                             3.425
+  mae_at_10pct_abstention          3.611
+  mae_at_20pct_abstention          3.667
+  mae_at_30pct_abstention          3.724
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.215
+  missed_risk_rate_inclusive       0.215
+  false_alarm_rate_retained        0.015
+  false_alarm_rate_inclusive       0.015
+  precision_retained               0.812
+  precision_inclusive              0.812
+  recall_retained                  0.785
+  recall_inclusive                 0.785
+  f1_retained                      0.797
+  f1_inclusive                     0.797
+  runtime_ms_per_1k                66.193
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.774
+  rmse                             5.164
+  rmse_retained                    5.164
+  retained_fraction                1.0
+  aurc                             3.115
+  mae_at_10pct_abstention          3.534
+  mae_at_20pct_abstention          3.499
+  mae_at_30pct_abstention          3.472
+  coverage                         0.901
+  calibration_error                0.01
+  interval_width_mean              18.003
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.215
+  missed_risk_rate_inclusive       0.215
+  false_alarm_rate_retained        0.015
+  false_alarm_rate_inclusive       0.015
+  precision_retained               0.812
+  precision_inclusive              0.812
+  recall_retained                  0.785
+  recall_inclusive                 0.785
+  f1_retained                      0.797
+  f1_inclusive                     0.797
+  runtime_ms_per_1k                54.588
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.575
+  rmse                             5.164
+  rmse_retained                    4.625
+  retained_fraction                0.96
+  aurc                             3.113
+  mae_at_10pct_abstention          3.532
+  mae_at_20pct_abstention          3.499
+  mae_at_30pct_abstention          3.469
+  coverage                         0.901
+  calibration_error                0.01
+  interval_width_mean              18.003
+  abstention_rate                  0.04
+  missed_risk_rate_retained        0.265
+  missed_risk_rate_inclusive       0.182
+  false_alarm_rate_retained        0.014
+  false_alarm_rate_inclusive       0.031
+  precision_retained               0.754
+  precision_inclusive              0.679
+  recall_retained                  0.735
+  recall_inclusive                 0.818
+  f1_retained                      0.742
+  f1_inclusive                     0.74
+  runtime_ms_per_1k                188.853
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.595
+  rmse                             5.164
+  rmse_retained                    4.662
+  retained_fraction                0.977
+  aurc                             3.115
+  mae_at_10pct_abstention          3.534
+  mae_at_20pct_abstention          3.499
+  mae_at_30pct_abstention          3.472
+  coverage                         0.901
+  calibration_error                0.01
+  interval_width_mean              18.003
+  abstention_rate                  0.023
+  missed_risk_rate_retained        0.257
+  missed_risk_rate_inclusive       0.199
+  false_alarm_rate_retained        0.014
+  false_alarm_rate_inclusive       0.021
+  precision_retained               0.768
+  precision_inclusive              0.757
+  recall_retained                  0.743
+  recall_inclusive                 0.801
+  f1_retained                      0.753
+  f1_inclusive                     0.776
+  runtime_ms_per_1k                59.711
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.627
+  rmse                             5.164
+  rmse_retained                    4.779
+  retained_fraction                0.942
+  aurc                             3.101
+  mae_at_10pct_abstention          3.553
+  mae_at_20pct_abstention          3.501
+  mae_at_30pct_abstention          3.463
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.058
+  missed_risk_rate_retained        0.251
+  missed_risk_rate_inclusive       0.17
+  false_alarm_rate_retained        0.013
+  false_alarm_rate_inclusive       0.049
+  precision_retained               0.764
+  precision_inclusive              0.587
+  recall_retained                  0.749
+  recall_inclusive                 0.83
+  f1_retained                      0.755
+  f1_inclusive                     0.684
+  runtime_ms_per_1k                167.535
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.767
+  rmse                             5.164
+  rmse_retained                    5.153
+  retained_fraction                0.963
+  aurc                             3.415
+  mae_at_10pct_abstention          3.78
+  mae_at_20pct_abstention          3.782
+  mae_at_30pct_abstention          3.799
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.037
+  missed_risk_rate_retained        0.216
+  missed_risk_rate_inclusive       0.208
+  false_alarm_rate_retained        0.015
+  false_alarm_rate_inclusive       0.052
+  precision_retained               0.81
+  precision_inclusive              0.553
+  recall_retained                  0.784
+  recall_inclusive                 0.792
+  f1_retained                      0.795
+  f1_inclusive                     0.649
+  runtime_ms_per_1k                37.124
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.074
+  mae                              3.774
+  mae_retained                     3.575
+  rmse                             5.164
+  rmse_retained                    4.625
+  retained_fraction                0.96
+  aurc                             3.113
+  mae_at_10pct_abstention          3.532
+  mae_at_20pct_abstention          3.499
+  mae_at_30pct_abstention          3.469
+  coverage                         0.901
+  calibration_error                0.01
+  interval_width_mean              18.003
+  abstention_rate                  0.04
+  missed_risk_rate_retained        0.265
+  missed_risk_rate_inclusive       0.182
+  false_alarm_rate_retained        0.014
+  false_alarm_rate_inclusive       0.031
+  precision_retained               0.754
+  precision_inclusive              0.679
+  recall_retained                  0.735
+  recall_inclusive                 0.818
+  f1_retained                      0.742
+  f1_inclusive                     0.74
+  runtime_ms_per_1k                186.637
+
+=======================================================
+EXPERIMENT: Single Shift (Traffic Surge)
+ID: exp2_single_shift | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     24.071
+  rmse                             37.496
+  rmse_retained                    37.496
+  retained_fraction                1.0
+  aurc                             9.391
+  mae_at_10pct_abstention          21.392
+  mae_at_20pct_abstention          18.362
+  mae_at_30pct_abstention          14.407
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.036
+  missed_risk_rate_inclusive       0.036
+  false_alarm_rate_retained        0.044
+  false_alarm_rate_inclusive       0.044
+  precision_retained               0.971
+  precision_inclusive              0.971
+  recall_retained                  0.964
+  recall_inclusive                 0.964
+  f1_retained                      0.967
+  f1_inclusive                     0.967
+  runtime_ms_per_1k                64.056
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     24.071
+  rmse                             37.496
+  rmse_retained                    37.496
+  retained_fraction                1.0
+  aurc                             9.407
+  mae_at_10pct_abstention          21.461
+  mae_at_20pct_abstention          18.248
+  mae_at_30pct_abstention          14.366
+  coverage                         0.712
+  calibration_error                0.188
+  interval_width_mean              52.952
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.036
+  missed_risk_rate_inclusive       0.036
+  false_alarm_rate_retained        0.044
+  false_alarm_rate_inclusive       0.044
+  precision_retained               0.971
+  precision_inclusive              0.971
+  recall_retained                  0.964
+  recall_inclusive                 0.964
+  f1_retained                      0.967
+  f1_inclusive                     0.967
+  runtime_ms_per_1k                56.195
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     4.325
+  rmse                             37.496
+  rmse_retained                    5.549
+  retained_fraction                0.505
+  aurc                             9.319
+  mae_at_10pct_abstention          21.326
+  mae_at_20pct_abstention          17.991
+  mae_at_30pct_abstention          14.255
+  coverage                         0.712
+  calibration_error                0.188
+  interval_width_mean              52.952
+  abstention_rate                  0.495
+  missed_risk_rate_retained        0.183
+  missed_risk_rate_inclusive       0.034
+  false_alarm_rate_retained        0.043
+  false_alarm_rate_inclusive       0.059
+  precision_retained               0.845
+  precision_inclusive              0.962
+  recall_retained                  0.817
+  recall_inclusive                 0.966
+  f1_retained                      0.83
+  f1_inclusive                     0.964
+  runtime_ms_per_1k                176.073
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     4.375
+  rmse                             37.496
+  rmse_retained                    5.632
+  retained_fraction                0.518
+  aurc                             9.409
+  mae_at_10pct_abstention          21.461
+  mae_at_20pct_abstention          18.248
+  mae_at_30pct_abstention          14.366
+  coverage                         0.712
+  calibration_error                0.188
+  interval_width_mean              52.952
+  abstention_rate                  0.482
+  missed_risk_rate_retained        0.174
+  missed_risk_rate_inclusive       0.036
+  false_alarm_rate_retained        0.043
+  false_alarm_rate_inclusive       0.054
+  precision_retained               0.856
+  precision_inclusive              0.964
+  recall_retained                  0.826
+  recall_inclusive                 0.964
+  f1_retained                      0.84
+  f1_inclusive                     0.964
+  runtime_ms_per_1k                57.537
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     6.231
+  rmse                             37.496
+  rmse_retained                    10.382
+  retained_fraction                0.546
+  aurc                             9.342
+  mae_at_10pct_abstention          21.36
+  mae_at_20pct_abstention          18.185
+  mae_at_30pct_abstention          14.367
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.454
+  missed_risk_rate_retained        0.125
+  missed_risk_rate_inclusive       0.033
+  false_alarm_rate_retained        0.04
+  false_alarm_rate_inclusive       0.065
+  precision_retained               0.899
+  precision_inclusive              0.958
+  recall_retained                  0.875
+  recall_inclusive                 0.967
+  f1_retained                      0.886
+  f1_inclusive                     0.962
+  runtime_ms_per_1k                158.98
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     23.696
+  rmse                             37.496
+  rmse_retained                    37.295
+  retained_fraction                0.504
+  aurc                             21.862
+  mae_at_10pct_abstention          24.078
+  mae_at_20pct_abstention          24.106
+  mae_at_30pct_abstention          24.153
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.496
+  missed_risk_rate_retained        0.035
+  missed_risk_rate_inclusive       0.017
+  false_alarm_rate_retained        0.036
+  false_alarm_rate_inclusive       0.501
+  precision_retained               0.974
+  precision_inclusive              0.748
+  recall_retained                  0.965
+  recall_inclusive                 0.983
+  f1_retained                      0.97
+  f1_inclusive                     0.85
+  runtime_ms_per_1k                29.821
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.602
+  mae                              24.071
+  mae_retained                     4.325
+  rmse                             37.496
+  rmse_retained                    5.549
+  retained_fraction                0.505
+  aurc                             9.319
+  mae_at_10pct_abstention          21.326
+  mae_at_20pct_abstention          17.991
+  mae_at_30pct_abstention          14.255
+  coverage                         0.712
+  calibration_error                0.188
+  interval_width_mean              52.952
+  abstention_rate                  0.495
+  missed_risk_rate_retained        0.183
+  missed_risk_rate_inclusive       0.034
+  false_alarm_rate_retained        0.043
+  false_alarm_rate_inclusive       0.059
+  precision_retained               0.845
+  precision_inclusive              0.962
+  recall_retained                  0.817
+  recall_inclusive                 0.966
+  f1_retained                      0.83
+  f1_inclusive                     0.964
+  runtime_ms_per_1k                175.737
+
+=======================================================
+EXPERIMENT: Compound Shift
+ID: exp3_compound_shift | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     24.936
+  rmse                             38.616
+  rmse_retained                    38.616
+  retained_fraction                1.0
+  aurc                             9.483
+  mae_at_10pct_abstention          21.042
+  mae_at_20pct_abstention          17.073
+  mae_at_30pct_abstention          12.618
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.071
+  missed_risk_rate_inclusive       0.071
+  false_alarm_rate_retained        0.059
+  false_alarm_rate_inclusive       0.059
+  precision_retained               0.971
+  precision_inclusive              0.971
+  recall_retained                  0.929
+  recall_inclusive                 0.929
+  f1_retained                      0.95
+  f1_inclusive                     0.95
+  runtime_ms_per_1k                64.451
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     24.936
+  rmse                             38.616
+  rmse_retained                    38.616
+  retained_fraction                1.0
+  aurc                             9.977
+  mae_at_10pct_abstention          22.27
+  mae_at_20pct_abstention          18.685
+  mae_at_30pct_abstention          13.716
+  coverage                         0.644
+  calibration_error                0.256
+  interval_width_mean              50.042
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.071
+  missed_risk_rate_inclusive       0.071
+  false_alarm_rate_retained        0.059
+  false_alarm_rate_inclusive       0.059
+  precision_retained               0.971
+  precision_inclusive              0.971
+  recall_retained                  0.929
+  recall_inclusive                 0.929
+  f1_retained                      0.95
+  f1_inclusive                     0.95
+  runtime_ms_per_1k                51.138
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     4.883
+  rmse                             38.616
+  rmse_retained                    6.796
+  retained_fraction                0.391
+  aurc                             9.582
+  mae_at_10pct_abstention          21.441
+  mae_at_20pct_abstention          17.823
+  mae_at_30pct_abstention          13.121
+  coverage                         0.644
+  calibration_error                0.256
+  interval_width_mean              50.042
+  abstention_rate                  0.609
+  missed_risk_rate_retained        0.269
+  missed_risk_rate_inclusive       0.039
+  false_alarm_rate_retained        0.046
+  false_alarm_rate_inclusive       0.133
+  precision_retained               0.846
+  precision_inclusive              0.939
+  recall_retained                  0.731
+  recall_inclusive                 0.961
+  f1_retained                      0.783
+  f1_inclusive                     0.95
+  runtime_ms_per_1k                170.79
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     5.952
+  rmse                             38.616
+  rmse_retained                    8.599
+  retained_fraction                0.546
+  aurc                             9.978
+  mae_at_10pct_abstention          22.28
+  mae_at_20pct_abstention          18.685
+  mae_at_30pct_abstention          13.716
+  coverage                         0.644
+  calibration_error                0.256
+  interval_width_mean              50.042
+  abstention_rate                  0.454
+  missed_risk_rate_retained        0.207
+  missed_risk_rate_inclusive       0.069
+  false_alarm_rate_retained        0.056
+  false_alarm_rate_inclusive       0.066
+  precision_retained               0.913
+  precision_inclusive              0.968
+  recall_retained                  0.793
+  recall_inclusive                 0.931
+  f1_retained                      0.848
+  f1_inclusive                     0.949
+  runtime_ms_per_1k                51.431
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     4.83
+  rmse                             38.616
+  rmse_retained                    7.059
+  retained_fraction                0.306
+  aurc                             10.998
+  mae_at_10pct_abstention          21.37
+  mae_at_20pct_abstention          18.154
+  mae_at_30pct_abstention          15.672
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.694
+  missed_risk_rate_retained        0.205
+  missed_risk_rate_inclusive       0.021
+  false_alarm_rate_retained        0.044
+  false_alarm_rate_inclusive       0.299
+  precision_retained               0.846
+  precision_inclusive              0.876
+  recall_retained                  0.795
+  recall_inclusive                 0.979
+  f1_retained                      0.817
+  f1_inclusive                     0.924
+  runtime_ms_per_1k                154.34
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     24.706
+  rmse                             38.616
+  rmse_retained                    38.441
+  retained_fraction                0.393
+  aurc                             22.191
+  mae_at_10pct_abstention          24.904
+  mae_at_20pct_abstention          24.705
+  mae_at_30pct_abstention          24.503
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.607
+  missed_risk_rate_retained        0.071
+  missed_risk_rate_inclusive       0.028
+  false_alarm_rate_retained        0.054
+  false_alarm_rate_inclusive       0.625
+  precision_retained               0.973
+  precision_inclusive              0.769
+  recall_retained                  0.929
+  recall_inclusive                 0.972
+  f1_retained                      0.95
+  f1_inclusive                     0.859
+  runtime_ms_per_1k                29.221
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.681
+  mae                              24.936
+  mae_retained                     4.883
+  rmse                             38.616
+  rmse_retained                    6.796
+  retained_fraction                0.391
+  aurc                             9.582
+  mae_at_10pct_abstention          21.441
+  mae_at_20pct_abstention          17.823
+  mae_at_30pct_abstention          13.121
+  coverage                         0.644
+  calibration_error                0.256
+  interval_width_mean              50.042
+  abstention_rate                  0.609
+  missed_risk_rate_retained        0.269
+  missed_risk_rate_inclusive       0.039
+  false_alarm_rate_retained        0.046
+  false_alarm_rate_inclusive       0.133
+  precision_retained               0.846
+  precision_inclusive              0.939
+  recall_retained                  0.731
+  recall_inclusive                 0.961
+  f1_retained                      0.783
+  f1_inclusive                     0.95
+  runtime_ms_per_1k                171.933
+
+=======================================================
+EXPERIMENT: Temporal Drift
+ID: exp4_temporal_drift | Seeds: 10 | Drift: True
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     12.907
+  rmse                             27.398
+  rmse_retained                    27.398
+  retained_fraction                1.0
+  aurc                             7.273
+  mae_at_10pct_abstention          9.252
+  mae_at_20pct_abstention          7.459
+  mae_at_30pct_abstention          7.774
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.173
+  missed_risk_rate_inclusive       0.173
+  false_alarm_rate_retained        0.022
+  false_alarm_rate_inclusive       0.022
+  precision_retained               0.947
+  precision_inclusive              0.947
+  recall_retained                  0.827
+  recall_inclusive                 0.827
+  f1_retained                      0.883
+  f1_inclusive                     0.883
+  detection_delay                  172.1
+  runtime_ms_per_1k                63.762
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     12.907
+  rmse                             27.398
+  rmse_retained                    27.398
+  retained_fraction                1.0
+  aurc                             6.951
+  mae_at_10pct_abstention          9.474
+  mae_at_20pct_abstention          7.32
+  mae_at_30pct_abstention          7.363
+  coverage                         0.783
+  calibration_error                0.117
+  interval_width_mean              29.279
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.173
+  missed_risk_rate_inclusive       0.173
+  false_alarm_rate_retained        0.022
+  false_alarm_rate_inclusive       0.022
+  precision_retained               0.947
+  precision_inclusive              0.947
+  recall_retained                  0.827
+  recall_inclusive                 0.827
+  f1_retained                      0.883
+  f1_inclusive                     0.883
+  detection_delay                  110.3
+  runtime_ms_per_1k                56.503
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     7.041
+  rmse                             27.398
+  rmse_retained                    19.186
+  retained_fraction                0.776
+  aurc                             6.865
+  mae_at_10pct_abstention          9.289
+  mae_at_20pct_abstention          7.304
+  mae_at_30pct_abstention          7.331
+  coverage                         0.783
+  calibration_error                0.117
+  interval_width_mean              29.279
+  abstention_rate                  0.224
+  missed_risk_rate_retained        0.414
+  missed_risk_rate_inclusive       0.145
+  false_alarm_rate_retained        0.019
+  false_alarm_rate_inclusive       0.042
+  precision_retained               0.838
+  precision_inclusive              0.906
+  recall_retained                  0.586
+  recall_inclusive                 0.855
+  f1_retained                      0.689
+  f1_inclusive                     0.88
+  detection_delay                  110.3
+  runtime_ms_per_1k                192.925
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     7.389
+  rmse                             27.398
+  rmse_retained                    19.844
+  retained_fraction                0.826
+  aurc                             6.951
+  mae_at_10pct_abstention          9.474
+  mae_at_20pct_abstention          7.32
+  mae_at_30pct_abstention          7.363
+  coverage                         0.783
+  calibration_error                0.117
+  interval_width_mean              29.279
+  abstention_rate                  0.174
+  missed_risk_rate_retained        0.353
+  missed_risk_rate_inclusive       0.168
+  false_alarm_rate_retained        0.021
+  false_alarm_rate_inclusive       0.029
+  precision_retained               0.875
+  precision_inclusive              0.932
+  recall_retained                  0.647
+  recall_inclusive                 0.832
+  f1_retained                      0.743
+  f1_inclusive                     0.879
+  detection_delay                  110.3
+  runtime_ms_per_1k                56.185
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     6.911
+  rmse                             27.398
+  rmse_retained                    18.217
+  retained_fraction                0.75
+  aurc                             6.479
+  mae_at_10pct_abstention          9.751
+  mae_at_20pct_abstention          7.774
+  mae_at_30pct_abstention          6.532
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.25
+  missed_risk_rate_retained        0.364
+  missed_risk_rate_inclusive       0.127
+  false_alarm_rate_retained        0.017
+  false_alarm_rate_inclusive       0.076
+  precision_retained               0.865
+  precision_inclusive              0.847
+  recall_retained                  0.636
+  recall_inclusive                 0.873
+  f1_retained                      0.732
+  f1_inclusive                     0.859
+  detection_delay                  152.8
+  runtime_ms_per_1k                158.829
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     12.813
+  rmse                             27.398
+  rmse_retained                    27.137
+  retained_fraction                0.776
+  aurc                             19.938
+  mae_at_10pct_abstention          13.91
+  mae_at_20pct_abstention          15.175
+  mae_at_30pct_abstention          16.805
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.224
+  missed_risk_rate_retained        0.172
+  missed_risk_rate_inclusive       0.133
+  false_alarm_rate_retained        0.022
+  false_alarm_rate_inclusive       0.24
+  precision_retained               0.947
+  precision_inclusive              0.631
+  recall_retained                  0.828
+  recall_inclusive                 0.867
+  f1_retained                      0.883
+  f1_inclusive                     0.73
+  detection_delay                  59.1
+  runtime_ms_per_1k                35.016
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.322
+  mae                              12.907
+  mae_retained                     3.827
+  rmse                             27.398
+  rmse_retained                    4.977
+  retained_fraction                0.68
+  aurc                             6.865
+  mae_at_10pct_abstention          9.289
+  mae_at_20pct_abstention          7.304
+  mae_at_30pct_abstention          7.331
+  coverage                         0.783
+  calibration_error                0.117
+  interval_width_mean              29.279
+  abstention_rate                  0.32
+  missed_risk_rate_retained        0.219
+  missed_risk_rate_inclusive       0.05
+  false_alarm_rate_retained        0.019
+  false_alarm_rate_inclusive       0.124
+  precision_retained               0.829
+  precision_inclusive              0.785
+  recall_retained                  0.781
+  recall_inclusive                 0.95
+  f1_retained                      0.803
+  f1_inclusive                     0.859
+  detection_delay                  85.0
+  runtime_ms_per_1k                181.676
+
+=======================================================
+EXPERIMENT: Missing / Delayed Telemetry
+ID: exp5_missing_telemetry | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     8.252
+  rmse                             15.344
+  rmse_retained                    15.344
+  retained_fraction                1.0
+  aurc                             6.273
+  mae_at_10pct_abstention          7.571
+  mae_at_20pct_abstention          7.587
+  mae_at_30pct_abstention          7.207
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.315
+  missed_risk_rate_inclusive       0.315
+  false_alarm_rate_retained        0.02
+  false_alarm_rate_inclusive       0.02
+  precision_retained               0.888
+  precision_inclusive              0.888
+  recall_retained                  0.685
+  recall_inclusive                 0.685
+  f1_retained                      0.773
+  f1_inclusive                     0.773
+  runtime_ms_per_1k                63.695
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     8.252
+  rmse                             15.344
+  rmse_retained                    15.344
+  retained_fraction                1.0
+  aurc                             6.369
+  mae_at_10pct_abstention          7.514
+  mae_at_20pct_abstention          7.563
+  mae_at_30pct_abstention          7.506
+  coverage                         0.765
+  calibration_error                0.135
+  interval_width_mean              21.561
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.315
+  missed_risk_rate_inclusive       0.315
+  false_alarm_rate_retained        0.02
+  false_alarm_rate_inclusive       0.02
+  precision_retained               0.888
+  precision_inclusive              0.888
+  recall_retained                  0.685
+  recall_inclusive                 0.685
+  f1_retained                      0.773
+  f1_inclusive                     0.773
+  runtime_ms_per_1k                54.617
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     7.501
+  rmse                             15.344
+  rmse_retained                    14.508
+  retained_fraction                0.919
+  aurc                             6.368
+  mae_at_10pct_abstention          7.509
+  mae_at_20pct_abstention          7.562
+  mae_at_30pct_abstention          7.506
+  coverage                         0.765
+  calibration_error                0.135
+  interval_width_mean              21.561
+  abstention_rate                  0.081
+  missed_risk_rate_retained        0.485
+  missed_risk_rate_inclusive       0.298
+  false_alarm_rate_retained        0.018
+  false_alarm_rate_inclusive       0.03
+  precision_retained               0.8
+  precision_inclusive              0.843
+  recall_retained                  0.515
+  recall_inclusive                 0.702
+  f1_retained                      0.625
+  f1_inclusive                     0.765
+  runtime_ms_per_1k                182.67
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     7.509
+  rmse                             15.344
+  rmse_retained                    14.489
+  retained_fraction                0.936
+  aurc                             6.369
+  mae_at_10pct_abstention          7.514
+  mae_at_20pct_abstention          7.563
+  mae_at_30pct_abstention          7.506
+  coverage                         0.765
+  calibration_error                0.135
+  interval_width_mean              21.561
+  abstention_rate                  0.064
+  missed_risk_rate_retained        0.453
+  missed_risk_rate_inclusive       0.307
+  false_alarm_rate_retained        0.019
+  false_alarm_rate_inclusive       0.024
+  precision_retained               0.817
+  precision_inclusive              0.87
+  recall_retained                  0.547
+  recall_inclusive                 0.693
+  f1_retained                      0.653
+  f1_inclusive                     0.771
+  runtime_ms_per_1k                53.163
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     7.64
+  rmse                             15.344
+  rmse_retained                    14.622
+  retained_fraction                0.912
+  aurc                             7.582
+  mae_at_10pct_abstention          7.644
+  mae_at_20pct_abstention          7.585
+  mae_at_30pct_abstention          7.779
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.088
+  missed_risk_rate_retained        0.433
+  missed_risk_rate_inclusive       0.284
+  false_alarm_rate_retained        0.017
+  false_alarm_rate_inclusive       0.046
+  precision_retained               0.834
+  precision_inclusive              0.782
+  recall_retained                  0.567
+  recall_inclusive                 0.716
+  f1_retained                      0.673
+  f1_inclusive                     0.747
+  runtime_ms_per_1k                150.175
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     8.226
+  rmse                             15.344
+  rmse_retained                    15.248
+  retained_fraction                0.921
+  aurc                             7.549
+  mae_at_10pct_abstention          8.204
+  mae_at_20pct_abstention          8.215
+  mae_at_30pct_abstention          8.276
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.079
+  missed_risk_rate_retained        0.312
+  missed_risk_rate_inclusive       0.285
+  false_alarm_rate_retained        0.02
+  false_alarm_rate_inclusive       0.094
+  precision_retained               0.886
+  precision_inclusive              0.635
+  recall_retained                  0.688
+  recall_inclusive                 0.715
+  f1_retained                      0.773
+  f1_inclusive                     0.672
+  runtime_ms_per_1k                35.445
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.186
+  mae                              8.252
+  mae_retained                     3.868
+  rmse                             15.344
+  rmse_retained                    4.973
+  retained_fraction                0.458
+  aurc                             6.368
+  mae_at_10pct_abstention          7.509
+  mae_at_20pct_abstention          7.562
+  mae_at_30pct_abstention          7.506
+  coverage                         0.765
+  calibration_error                0.135
+  interval_width_mean              21.561
+  abstention_rate                  0.542
+  missed_risk_rate_retained        0.202
+  missed_risk_rate_inclusive       0.051
+  false_alarm_rate_retained        0.027
+  false_alarm_rate_inclusive       0.51
+  precision_retained               0.775
+  precision_inclusive              0.298
+  recall_retained                  0.798
+  recall_inclusive                 0.949
+  f1_retained                      0.783
+  f1_inclusive                     0.453
+  runtime_ms_per_1k                184.838
+
+=======================================================
+EXPERIMENT: Unfamiliar Combinations
+ID: exp6_unfamiliar_extreme | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     77.615
+  rmse                             98.918
+  rmse_retained                    98.918
+  retained_fraction                1.0
+  aurc                             67.822
+  mae_at_10pct_abstention          76.379
+  mae_at_20pct_abstention          75.741
+  mae_at_30pct_abstention          74.534
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.354
+  missed_risk_rate_inclusive       0.354
+  false_alarm_rate_retained        0.027
+  false_alarm_rate_inclusive       0.027
+  precision_retained               0.995
+  precision_inclusive              0.995
+  recall_retained                  0.646
+  recall_inclusive                 0.646
+  f1_retained                      0.783
+  f1_inclusive                     0.783
+  runtime_ms_per_1k                59.138
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     77.615
+  rmse                             98.918
+  rmse_retained                    98.918
+  retained_fraction                1.0
+  aurc                             67.58
+  mae_at_10pct_abstention          76.907
+  mae_at_20pct_abstention          76.08
+  mae_at_30pct_abstention          74.8
+  coverage                         0.203
+  calibration_error                0.697
+  interval_width_mean              51.285
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.354
+  missed_risk_rate_inclusive       0.354
+  false_alarm_rate_retained        0.027
+  false_alarm_rate_inclusive       0.027
+  precision_retained               0.995
+  precision_inclusive              0.995
+  recall_retained                  0.646
+  recall_inclusive                 0.646
+  f1_retained                      0.783
+  f1_inclusive                     0.783
+  runtime_ms_per_1k                52.869
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     78.394
+  rmse                             98.918
+  rmse_retained                    107.674
+  retained_fraction                0.384
+  aurc                             67.914
+  mae_at_10pct_abstention          76.354
+  mae_at_20pct_abstention          75.162
+  mae_at_30pct_abstention          74.091
+  coverage                         0.203
+  calibration_error                0.697
+  interval_width_mean              51.285
+  abstention_rate                  0.617
+  missed_risk_rate_retained        0.873
+  missed_risk_rate_inclusive       0.284
+  false_alarm_rate_retained        0.016
+  false_alarm_rate_inclusive       0.096
+  precision_retained               0.963
+  precision_inclusive              0.986
+  recall_retained                  0.127
+  recall_inclusive                 0.716
+  f1_retained                      0.224
+  f1_inclusive                     0.829
+  runtime_ms_per_1k                163.694
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     73.414
+  rmse                             98.918
+  rmse_retained                    102.893
+  retained_fraction                0.533
+  aurc                             67.581
+  mae_at_10pct_abstention          76.922
+  mae_at_20pct_abstention          76.08
+  mae_at_30pct_abstention          74.8
+  coverage                         0.203
+  calibration_error                0.697
+  interval_width_mean              51.285
+  abstention_rate                  0.467
+  missed_risk_rate_retained        0.718
+  missed_risk_rate_inclusive       0.346
+  false_alarm_rate_retained        0.026
+  false_alarm_rate_inclusive       0.029
+  precision_retained               0.981
+  precision_inclusive              0.995
+  recall_retained                  0.282
+  recall_inclusive                 0.654
+  f1_retained                      0.433
+  f1_inclusive                     0.789
+  runtime_ms_per_1k                54.68
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     77.063
+  rmse                             98.918
+  rmse_retained                    105.374
+  retained_fraction                0.301
+  aurc                             69.85
+  mae_at_10pct_abstention          76.125
+  mae_at_20pct_abstention          75.298
+  mae_at_30pct_abstention          73.814
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.699
+  missed_risk_rate_retained        0.79
+  missed_risk_rate_inclusive       0.204
+  false_alarm_rate_retained        0.015
+  false_alarm_rate_inclusive       0.311
+  precision_retained               0.975
+  precision_inclusive              0.96
+  recall_retained                  0.21
+  recall_inclusive                 0.796
+  f1_retained                      0.339
+  f1_inclusive                     0.869
+  runtime_ms_per_1k                146.796
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     77.095
+  rmse                             98.918
+  rmse_retained                    98.208
+  retained_fraction                0.387
+  aurc                             70.232
+  mae_at_10pct_abstention          77.559
+  mae_at_20pct_abstention          77.56
+  mae_at_30pct_abstention          77.891
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.613
+  missed_risk_rate_retained        0.358
+  missed_risk_rate_inclusive       0.138
+  false_alarm_rate_retained        0.03
+  false_alarm_rate_inclusive       0.613
+  precision_retained               0.995
+  precision_inclusive              0.929
+  recall_retained                  0.642
+  recall_inclusive                 0.862
+  f1_retained                      0.78
+  f1_inclusive                     0.894
+  runtime_ms_per_1k                31.168
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.903
+  mae                              77.615
+  mae_retained                     7.979
+  rmse                             98.918
+  rmse_retained                    12.823
+  retained_fraction                0.038
+  aurc                             67.914
+  mae_at_10pct_abstention          76.354
+  mae_at_20pct_abstention          75.162
+  mae_at_30pct_abstention          74.091
+  coverage                         0.203
+  calibration_error                0.697
+  interval_width_mean              51.285
+  abstention_rate                  0.962
+  missed_risk_rate_retained        0.537
+  missed_risk_rate_inclusive       0.008
+  false_alarm_rate_retained        0.033
+  false_alarm_rate_inclusive       0.76
+  precision_retained               0.882
+  precision_inclusive              0.924
+  recall_retained                  0.463
+  recall_inclusive                 0.992
+  f1_retained                      0.59
+  f1_inclusive                     0.957
+  runtime_ms_per_1k                171.16
+
+=======================================================
+EXPERIMENT: Matched Severity: Compound Shift
+ID: exp7_compound_matched | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     5.883
+  rmse                             9.952
+  rmse_retained                    9.952
+  retained_fraction                1.0
+  aurc                             3.693
+  mae_at_10pct_abstention          4.133
+  mae_at_20pct_abstention          3.96
+  mae_at_30pct_abstention          3.964
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.105
+  missed_risk_rate_inclusive       0.105
+  false_alarm_rate_retained        0.031
+  false_alarm_rate_inclusive       0.031
+  precision_retained               0.908
+  precision_inclusive              0.908
+  recall_retained                  0.895
+  recall_inclusive                 0.895
+  f1_retained                      0.901
+  f1_inclusive                     0.901
+  runtime_ms_per_1k                68.202
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     5.883
+  rmse                             9.952
+  rmse_retained                    9.952
+  retained_fraction                1.0
+  aurc                             3.587
+  mae_at_10pct_abstention          4.135
+  mae_at_20pct_abstention          3.954
+  mae_at_30pct_abstention          3.888
+  coverage                         0.88
+  calibration_error                0.02
+  interval_width_mean              24.845
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.105
+  missed_risk_rate_inclusive       0.105
+  false_alarm_rate_retained        0.031
+  false_alarm_rate_inclusive       0.031
+  precision_retained               0.908
+  precision_inclusive              0.908
+  recall_retained                  0.895
+  recall_inclusive                 0.895
+  f1_retained                      0.901
+  f1_inclusive                     0.901
+  runtime_ms_per_1k                60.456
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     3.971
+  rmse                             9.952
+  rmse_retained                    5.1
+  retained_fraction                0.846
+  aurc                             3.576
+  mae_at_10pct_abstention          4.124
+  mae_at_20pct_abstention          3.945
+  mae_at_30pct_abstention          3.885
+  coverage                         0.88
+  calibration_error                0.02
+  interval_width_mean              24.845
+  abstention_rate                  0.154
+  missed_risk_rate_retained        0.182
+  missed_risk_rate_inclusive       0.085
+  false_alarm_rate_retained        0.028
+  false_alarm_rate_inclusive       0.053
+  precision_retained               0.827
+  precision_inclusive              0.855
+  recall_retained                  0.818
+  recall_inclusive                 0.915
+  f1_retained                      0.821
+  f1_inclusive                     0.883
+  runtime_ms_per_1k                173.817
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     4.078
+  rmse                             9.952
+  rmse_retained                    5.301
+  retained_fraction                0.884
+  aurc                             3.587
+  mae_at_10pct_abstention          4.135
+  mae_at_20pct_abstention          3.954
+  mae_at_30pct_abstention          3.888
+  coverage                         0.88
+  calibration_error                0.02
+  interval_width_mean              24.845
+  abstention_rate                  0.116
+  missed_risk_rate_retained        0.176
+  missed_risk_rate_inclusive       0.101
+  false_alarm_rate_retained        0.03
+  false_alarm_rate_inclusive       0.039
+  precision_retained               0.848
+  precision_inclusive              0.887
+  recall_retained                  0.824
+  recall_inclusive                 0.899
+  f1_retained                      0.834
+  f1_inclusive                     0.892
+  runtime_ms_per_1k                57.266
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     4.151
+  rmse                             9.952
+  rmse_retained                    5.581
+  retained_fraction                0.827
+  aurc                             3.541
+  mae_at_10pct_abstention          4.749
+  mae_at_20pct_abstention          4.07
+  mae_at_30pct_abstention          3.835
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.173
+  missed_risk_rate_retained        0.158
+  missed_risk_rate_inclusive       0.074
+  false_alarm_rate_retained        0.026
+  false_alarm_rate_inclusive       0.079
+  precision_retained               0.849
+  precision_inclusive              0.801
+  recall_retained                  0.842
+  recall_inclusive                 0.926
+  f1_retained                      0.845
+  f1_inclusive                     0.858
+  runtime_ms_per_1k                161.926
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     5.909
+  rmse                             9.952
+  rmse_retained                    10.0
+  retained_fraction                0.846
+  aurc                             5.206
+  mae_at_10pct_abstention          5.865
+  mae_at_20pct_abstention          5.854
+  mae_at_30pct_abstention          5.863
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.154
+  missed_risk_rate_retained        0.106
+  missed_risk_rate_inclusive       0.09
+  false_alarm_rate_retained        0.031
+  false_alarm_rate_inclusive       0.182
+  precision_retained               0.91
+  precision_inclusive              0.631
+  recall_retained                  0.894
+  recall_inclusive                 0.91
+  f1_retained                      0.901
+  f1_inclusive                     0.745
+  runtime_ms_per_1k                31.583
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.255
+  mae                              5.883
+  mae_retained                     3.971
+  rmse                             9.952
+  rmse_retained                    5.1
+  retained_fraction                0.846
+  aurc                             3.576
+  mae_at_10pct_abstention          4.124
+  mae_at_20pct_abstention          3.945
+  mae_at_30pct_abstention          3.885
+  coverage                         0.88
+  calibration_error                0.02
+  interval_width_mean              24.845
+  abstention_rate                  0.154
+  missed_risk_rate_retained        0.182
+  missed_risk_rate_inclusive       0.085
+  false_alarm_rate_retained        0.028
+  false_alarm_rate_inclusive       0.053
+  precision_retained               0.827
+  precision_inclusive              0.855
+  recall_retained                  0.818
+  recall_inclusive                 0.915
+  f1_retained                      0.821
+  f1_inclusive                     0.883
+  runtime_ms_per_1k                190.416
+
+=======================================================
+EXPERIMENT: Matched Severity: Single Shift
+ID: exp7_single_matched | Seeds: 10 | Drift: False
+=======================================================
+
+[Conventional Model (No Warning)]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     16.235
+  rmse                             26.822
+  rmse_retained                    26.822
+  retained_fraction                1.0
+  aurc                             6.232
+  mae_at_10pct_abstention          13.744
+  mae_at_20pct_abstention          10.712
+  mae_at_30pct_abstention          6.612
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.039
+  missed_risk_rate_inclusive       0.039
+  false_alarm_rate_retained        0.042
+  false_alarm_rate_inclusive       0.042
+  precision_retained               0.956
+  precision_inclusive              0.956
+  recall_retained                  0.961
+  recall_inclusive                 0.961
+  f1_retained                      0.959
+  f1_inclusive                     0.959
+  runtime_ms_per_1k                60.824
+
+[Conformal UQ Model (Coverage Target 90%)]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     16.235
+  rmse                             26.822
+  rmse_retained                    26.822
+  retained_fraction                1.0
+  aurc                             6.245
+  mae_at_10pct_abstention          13.709
+  mae_at_20pct_abstention          10.651
+  mae_at_30pct_abstention          6.708
+  coverage                         0.786
+  calibration_error                0.114
+  interval_width_mean              44.402
+  abstention_rate                  0.0
+  missed_risk_rate_retained        0.039
+  missed_risk_rate_inclusive       0.039
+  false_alarm_rate_retained        0.042
+  false_alarm_rate_inclusive       0.042
+  precision_retained               0.956
+  precision_inclusive              0.956
+  recall_retained                  0.961
+  recall_inclusive                 0.961
+  f1_retained                      0.959
+  f1_inclusive                     0.959
+  runtime_ms_per_1k                70.695
+
+[Proposed ShiftGuard (UQ + Unfamiliarity Abstention)]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     4.313
+  rmse                             26.822
+  rmse_retained                    5.523
+  retained_fraction                0.616
+  aurc                             6.197
+  mae_at_10pct_abstention          13.612
+  mae_at_20pct_abstention          10.541
+  mae_at_30pct_abstention          6.594
+  coverage                         0.786
+  calibration_error                0.114
+  interval_width_mean              44.402
+  abstention_rate                  0.384
+  missed_risk_rate_retained        0.161
+  missed_risk_rate_inclusive       0.037
+  false_alarm_rate_retained        0.04
+  false_alarm_rate_inclusive       0.056
+  precision_retained               0.821
+  precision_inclusive              0.942
+  recall_retained                  0.839
+  recall_inclusive                 0.963
+  f1_retained                      0.829
+  f1_inclusive                     0.952
+  runtime_ms_per_1k                180.881
+
+[Ablation: Conformal Width-Only Abstention]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     4.358
+  rmse                             26.822
+  rmse_retained                    5.589
+  retained_fraction                0.632
+  aurc                             6.246
+  mae_at_10pct_abstention          13.705
+  mae_at_20pct_abstention          10.655
+  mae_at_30pct_abstention          6.708
+  coverage                         0.786
+  calibration_error                0.114
+  interval_width_mean              44.402
+  abstention_rate                  0.368
+  missed_risk_rate_retained        0.148
+  missed_risk_rate_inclusive       0.038
+  false_alarm_rate_retained        0.041
+  false_alarm_rate_inclusive       0.051
+  precision_retained               0.834
+  precision_inclusive              0.948
+  recall_retained                  0.852
+  recall_inclusive                 0.962
+  f1_retained                      0.842
+  f1_inclusive                     0.955
+  runtime_ms_per_1k                55.719
+
+[Ablation: Isolation Forest OOD-Only Abstention]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     5.522
+  rmse                             26.822
+  rmse_retained                    8.723
+  retained_fraction                0.649
+  aurc                             6.199
+  mae_at_10pct_abstention          13.724
+  mae_at_20pct_abstention          10.899
+  mae_at_30pct_abstention          7.45
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.351
+  missed_risk_rate_retained        0.116
+  missed_risk_rate_inclusive       0.035
+  false_alarm_rate_retained        0.038
+  false_alarm_rate_inclusive       0.066
+  precision_retained               0.875
+  precision_inclusive              0.933
+  recall_retained                  0.884
+  recall_inclusive                 0.965
+  f1_retained                      0.879
+  f1_inclusive                     0.949
+  runtime_ms_per_1k                153.574
+
+[Control: Random Abstention (Matched Rate)]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     15.904
+  rmse                             26.822
+  rmse_retained                    26.228
+  retained_fraction                0.618
+  aurc                             14.876
+  mae_at_10pct_abstention          16.118
+  mae_at_20pct_abstention          16.271
+  mae_at_30pct_abstention          16.293
+  coverage                         None (no interval mechanism)
+  calibration_error                None (no interval mechanism)
+  interval_width_mean              None (no interval mechanism)
+  abstention_rate                  0.382
+  missed_risk_rate_retained        0.041
+  missed_risk_rate_inclusive       0.026
+  false_alarm_rate_retained        0.043
+  false_alarm_rate_inclusive       0.408
+  precision_retained               0.955
+  precision_inclusive              0.695
+  recall_retained                  0.959
+  recall_inclusive                 0.974
+  f1_retained                      0.957
+  f1_inclusive                     0.811
+  runtime_ms_per_1k                32.256
+
+[Ablation: ShiftGuard Missing-Telemetry Aware]
+  base_violation_rate              0.488
+  mae                              16.235
+  mae_retained                     4.313
+  rmse                             26.822
+  rmse_retained                    5.523
+  retained_fraction                0.616
+  aurc                             6.197
+  mae_at_10pct_abstention          13.612
+  mae_at_20pct_abstention          10.541
+  mae_at_30pct_abstention          6.594
+  coverage                         0.786
+  calibration_error                0.114
+  interval_width_mean              44.402
+  abstention_rate                  0.384
+  missed_risk_rate_retained        0.161
+  missed_risk_rate_inclusive       0.037
+  false_alarm_rate_retained        0.04
+  false_alarm_rate_inclusive       0.056
+  precision_retained               0.821
+  precision_inclusive              0.942
+  recall_retained                  0.839
+  recall_inclusive                 0.963
+  f1_retained                      0.829
+  f1_inclusive                     0.952
+  runtime_ms_per_1k                179.869

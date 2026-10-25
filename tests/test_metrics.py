@@ -4,10 +4,12 @@ import numpy as np
 import pytest
 from shiftguard.evaluation.metrics import (
     compute_regression_metrics,
-    compute_classification_metrics,
+    compute_dual_classification_metrics,
     compute_reliability_metrics,
-    compute_warning_quality_metrics,
+    compute_dual_warning_quality_metrics,
     compute_detection_delay,
+    compute_risk_coverage_curve,
+    compute_matched_rate_mae,
 )
 
 
@@ -28,52 +30,94 @@ def test_regression_metrics_basic_and_retained():
     assert np.isclose(res["retained_fraction"], 0.75)
 
 
-def test_classification_metrics_precision_recall_f1():
-    """Classification metrics must compute standard binary metrics."""
+def test_dual_classification_metrics():
+    """Both retained and inclusive classification metrics must be evaluated."""
     y_true = np.array([1, 1, 0, 0])
-    y_pred = np.array([1, 0, 1, 0])
+    y_pred = np.array([1, 0, 0, 0])
+    abstain = np.array([False, True, False, False])  # 2nd sample abstained
 
-    res = compute_classification_metrics(y_true, y_pred)
-    assert np.isclose(res["precision"], 0.5)  # 1 TP / 2 predicted positives
-    assert np.isclose(res["recall"], 0.5)     # 1 TP / 2 actual positives
-    assert np.isclose(res["f1"], 0.5)
+    res = compute_dual_classification_metrics(y_true, y_pred, abstain_mask=abstain)
+
+    # Retained: only indices 0, 2, 3. y_true=[1, 0, 0], y_pred=[1, 0, 0]
+    # TP=1, FP=0, FN=0 -> Precision=1.0, Recall=1.0, F1=1.0
+    assert np.isclose(res["precision_retained"], 1.0)
+    assert np.isclose(res["recall_retained"], 1.0)
+    assert np.isclose(res["f1_retained"], 1.0)
+
+    # Inclusive: abstention counts as alert (index 1 is alerted)
+    # y_pred_inc = [1, 1, 0, 0], y_true = [1, 1, 0, 0] -> Perfect detection
+    assert np.isclose(res["precision_inclusive"], 1.0)
+    assert np.isclose(res["recall_inclusive"], 1.0)
+    assert np.isclose(res["f1_inclusive"], 1.0)
 
 
-def test_reliability_metrics_coverage_and_calib_error():
-    """Coverage must count ground truth inside intervals; calibration error is |target - coverage|."""
-    y_true = np.array([20.0, 30.0, 40.0, 50.0])
-    lower = np.array([18.0, 25.0, 45.0, 48.0])  # 3rd is not covered (40 < 45)
-    upper = np.array([22.0, 35.0, 55.0, 52.0])
+def test_reliability_metrics_none_for_point_models():
+    """Models without intervals must produce None/null, not 0.0 or 0.9."""
+    y_true = np.array([20.0, 30.0, 40.0])
+    res_none = compute_reliability_metrics(y_true, None, None)
 
-    res = compute_reliability_metrics(y_true, lower, upper, nominal_coverage=0.90)
-    assert np.isclose(res["coverage"], 0.75)  # 3 of 4 covered
-    assert np.isclose(res["calibration_error"], 0.15)  # |0.90 - 0.75|
+    assert res_none["coverage"] is None
+    assert res_none["calibration_error"] is None
+    assert res_none["interval_width_mean"] is None
+
+    # When intervals are present
+    lower = np.array([18.0, 25.0, 45.0])
+    upper = np.array([22.0, 35.0, 55.0])
+    res_valid = compute_reliability_metrics(y_true, lower, upper, nominal_coverage=0.90)
+    assert res_valid["coverage"] is not None
+    assert np.isclose(res_valid["coverage"], 2.0 / 3.0)
+    assert np.isclose(res_valid["calibration_error"], abs(0.90 - 2.0 / 3.0))
 
 
-def test_warning_quality_metrics():
-    """False alarm and missed risk rates must correctly reflect safety decisions."""
+def test_dual_warning_quality_metrics():
+    """Dual false alarm and missed risk rates must correctly reflect retained vs inclusive."""
     # Threshold is 60.0 ms
     y_true = np.array([40.0, 50.0, 70.0, 80.0])  # 2 safe, 2 violations
-    y_pred_bin = np.array([0, 1, 0, 1])           # 2nd is false alarm, 3rd predicted 0
-    abstain = np.array([False, False, True, False])# 3rd abstained (not missed risk!)
+    y_pred_bin = np.array([0, 0, 0, 1])           # 2nd is safe, 3rd predicted safe
+    abstain = np.array([False, True, True, False])# 2nd and 3rd abstained
 
-    res = compute_warning_quality_metrics(y_true, y_pred_bin, abstain_mask=abstain)
+    res = compute_dual_warning_quality_metrics(y_true, y_pred_bin, abstain_mask=abstain)
 
-    assert np.isclose(res["abstention_rate"], 0.25)
-    # Safe count = 2. 2nd was alerted -> 1/2 = 0.5
-    assert np.isclose(res["false_alarm_rate"], 0.5)
-    # Violations count = 2. 3rd was abstained, 4th was predicted 1.
-    # Silent failures = 0 -> Missed risk rate = 0.0
-    assert np.isclose(res["missed_risk_rate"], 0.0)
+    assert np.isclose(res["abstention_rate"], 0.50)
+
+    # Retained: samples 0 and 3
+    # sample 0: safe (40), predicted safe (0) -> FAR retained = 0/1 = 0.0
+    # sample 3: violation (80), predicted violation (1) -> MRR retained = 0/1 = 0.0
+    assert np.isclose(res["false_alarm_rate_retained"], 0.0)
+    assert np.isclose(res["missed_risk_rate_retained"], 0.0)
+
+    # Inclusive:
+    # safe total = 2 (samples 0, 1). Sample 1 abstained (alerted) -> FAR inclusive = 1/2 = 0.5
+    assert np.isclose(res["false_alarm_rate_inclusive"], 0.50)
+    # violation total = 2 (samples 2, 3). Sample 2 abstained (caught!), sample 3 predicted 1 -> MRR = 0.0
+    assert np.isclose(res["missed_risk_rate_inclusive"], 0.0)
 
 
 def test_detection_delay_calculation():
     """Detection delay must count steps from drift start until sustained warning."""
     is_drift = np.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 1])  # drift starts at index 3
-    # Warning signals trigger at index 5
-    warnings = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+    warnings = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])  # alerts start at index 5
 
     delay = compute_detection_delay(is_drift, warnings, window_consecutive=3)
-    # First index where 3 of 3 windows are 1 is index 5.
-    # Delay from index 3 to 5 is 2 steps.
+    # Index 5 is first sustained window (5, 6, 7). Delay = 5 - 3 = 2 steps.
     assert np.isclose(delay, 2.0)
+
+
+def test_risk_coverage_curve_and_aurc():
+    """Risk coverage curve must compute decreasing or monotonic retained error and AURC."""
+    y_true = np.linspace(10, 100, 100)
+    y_pred = np.zeros(100)  # error grows from 10 to 100
+    scores = np.linspace(1, 100, 100)  # perfect uncertainty score
+
+    rates, maes, aurc = compute_risk_coverage_curve(y_true, y_pred, scores, grid_points=10)
+    assert len(rates) == 10
+    assert len(maes) == 10
+    # As abstention increases, error on retained samples must strictly decrease!
+    assert maes[-1] < maes[0]
+    assert aurc > 0.0
+
+    matched = compute_matched_rate_mae(y_true, y_pred, scores, matched_rates=(0.10, 0.20, 0.30))
+    assert "mae_at_10pct_abstention" in matched
+    assert "mae_at_20pct_abstention" in matched
+    assert "mae_at_30pct_abstention" in matched
+    assert matched["mae_at_30pct_abstention"] < matched["mae_at_10pct_abstention"]

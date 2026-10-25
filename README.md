@@ -128,23 +128,23 @@ Visit `http://localhost:5173` to explore the 10 interactive scenes, mechanical a
 ShiftGuard-6G/
 ├── shiftguard/                  # Python Backend Package
 │   ├── simulator/
-│   │   └── scenarios.py         # Scenario dataclass & non-linear latency generator
+│   │   └── scenarios.py         # Severity levels & non-linear latency generator
 │   ├── models/
 │   │   └── baseline.py          # HistGradientBoostingRegressor (Approach 1)
 │   ├── reliability/
 │   │   ├── conformal.py         # Normalized Split Conformal Predictor (Approach 2)
 │   │   ├── ood.py               # Isolation Forest Unfamiliarity Detector
-│   │   └── abstain.py           # Combined ShiftGuard Engine (Approach 3)
+│   │   └── abstain.py           # ShiftGuard Engine & 4 Ablations (Width, OOD, Random, Missing)
 │   ├── evaluation/
-│   │   ├── metrics.py           # Multidimensional evaluation metrics
-│   │   └── run_experiments.py   # 10-seed experiment runner across 6 experiments
+│   │   ├── metrics.py           # Dual warning metrics, AURC, matched-rate evaluation
+│   │   └── run_experiments.py   # 10-seed experiment runner across 7 experimental regimes
 │   └── api/
 │       └── main.py              # FastAPI REST endpoints
-├── tests/                       # Complete Pytest test suite (23 tests)
+├── tests/                       # Complete Pytest test suite (27 tests)
 │   ├── test_simulator.py
 │   ├── test_baseline.py
 │   ├── test_conformal.py
-│   ├── test_abstain.py
+│   ├── test_abstain.py        # Strict validation-only threshold tuning test (zero leakage)
 │   ├── test_metrics.py
 │   └── test_api.py
 ├── results/                     # Empirical benchmark JSON outputs ("simulated": true)
@@ -154,13 +154,15 @@ ShiftGuard-6G/
 │   ├── exp4_temporal_drift.json
 │   ├── exp5_missing_telemetry.json
 │   ├── exp6_unfamiliar_extreme.json
+│   ├── exp7_single_matched.json
+│   ├── exp7_compound_matched.json
 │   └── benchmark_summary.json
 ├── src/                         # 3D Web Observatory Frontend (React + Three.js)
 │   ├── components/              # UI sections, cursor, header, preloader
 │   ├── scenes/                  # Three.js 3D canvas, iris, lattice, doors
 │   ├── data/content.ts          # Central website copy
 │   └── hooks/                   # Observatory store
-├── EXPERIMENTS.md               # Detailed experiment protocols & metric definitions
+├── EXPERIMENTS.md               # Detailed experiment protocols, failure diagnoses & metric definitions
 ├── DESIGN_NOTES.md              # 3D motion physics & extension guide
 ├── requirements.txt             # Python dependencies
 ├── pytest.ini                   # Pytest configuration
@@ -171,7 +173,9 @@ ShiftGuard-6G/
 
 ## ⚠️ Limitations & Scientific Scope
 
-1. **Synthetic Data**: All telemetry features (traffic load, handovers, SINR) and latency targets are synthetically generated from mathematical models rather than live sub-THz / 6G testbeds.
+1. **Synthetic Data**: All telemetry features (traffic load, handovers, SINR) and latency targets are synthetically generated from mathematical models rather than live sub-THz / 6G testbeds. All result files strictly include `"simulated": true`.
 2. **Simplified Physical Layer**: Channel noise and Doppler effects are modeled using parametric Gaussian and Poisson approximations rather than full ray-tracing electromagnetic simulations (e.g., ns-3 or Sionna).
-3. **Hypothesis Status**: The compound shift vulnerability hypothesis represents a candidate research framework. Real wireless deployments require validation via empirical measurement campaigns.
-4. **Offline Conformal Validity**: Split conformal coverage guarantees hold under exchangeable distributions. Under extreme compound shift, marginal coverage degrades as expected, motivating the active abstention mechanism.
+3. **Conformal Validity Under Distribution Shift**: Marginal coverage guarantees ($\ge 1 - \alpha$) mathematically assume exchangeability between calibration and test data. Under severe non-stationary shift, empirical coverage inevitably degrades (falling to ~20% under extreme compound shift), which is precisely why defensive active abstention is required.
+4. **Imputation Masquerading in Incomplete Telemetry**: Under standard median imputation, severe out-of-distribution instances with missing features can masquerade as calm in-distribution instances, causing narrow predicted intervals and missed abstentions. Mitigating this requires explicit missingness indicators in epistemic detectors (`ShiftGuardMissingAwareEngine`).
+5. **Concentrated vs. Distributed Disturbance Effects**: At moderate total disturbance budgets ($\sum s_i = 0.60$), concentrating the entire budget into a single bottleneck axis (e.g. traffic load) creates earlier queue saturation than distributing that budget mildly across multiple axes. However, under high severity, multi-axis compound shifts cause catastrophic nonlinear coupling.
+6. **Zero Test-Leakage**: All decision thresholds ($\tau_{\text{width}}, \tau_{\text{ood}}$) are selected exclusively on validation scenarios and frozen prior to test evaluation.

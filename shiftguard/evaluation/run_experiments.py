@@ -1,27 +1,32 @@
-"""Component D: Experiment Runner for ShiftGuard-6G Benchmark Suite.
+"""Component D: Benchmark Experiment Runner for ShiftGuard-6G.
 
-Executes all 6 experiments across 3 predictive approaches and >= 10 random seeds:
-- Exp 1: Normal Conditions (Baseline)
-- Exp 2: Single Shift (Traffic Surge)
-- Exp 3: Compound Shift (Surge + Noise + Handovers)
-- Exp 4: Temporal Drift (Evolving Non-Stationary Shift)
-- Exp 5: Missing / Delayed Telemetry (30% Telemetry Loss)
-- Exp 6: Unfamiliar Combinations (Extreme Out-of-Distribution Stress)
+Executes all experimental regimes across predictive approaches and ablations:
+Approaches:
+1. approach1_conventional: Baseline point regressor with zero uncertainty warning
+2. approach2_conformal: Normalized split conformal prediction (coverage target 90%)
+3. approach3_shiftguard: Proposed ShiftGuard (conformal width + unfamiliarity score)
+4. ablation_width_only: Abstention based exclusively on conformal interval width
+5. ablation_ood_only: Abstention based exclusively on Isolation Forest OOD score
+6. ablation_random: Uniform random abstention matching ShiftGuard rate (control)
+7. ablation_shiftguard_missing: ShiftGuard with explicit missing-telemetry awareness
 
-Approaches compared:
-- Approach 1: Conventional Model (No uncertainty warning)
-- Approach 2: Conformal UQ Model (Normalized Split Conformal Intervals)
-- Approach 3: Proposed ShiftGuard Method (Conformal Uncertainty + Unfamiliarity Abstention)
+Experiments:
+1. exp1_normal: Normal conditions (baseline test)
+2. exp2_single_shift: Single disturbance (traffic surge)
+3. exp3_compound_shift: Multi-factor compound shift (surge + noise + handovers)
+4. exp4_temporal_drift: Gradual non-stationary drift over time
+5. exp5_missing_telemetry: Intermittent packet/telemetry dropouts
+6. exp6_unfamiliar_extreme: Unfamiliar combinations & epistemic stress
+7. exp7_matched_severity: Single vs. Compound shifts at the exact same total severity budget
 
-All outputs contain {"simulated": true} and are computed from actual execution.
+All outputs contain {"simulated": true} and are computed from actual execution across >= 10 seeds.
 """
 
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
@@ -34,15 +39,24 @@ from shiftguard.simulator.scenarios import (
 from shiftguard.models.baseline import BaselinePredictor
 from shiftguard.reliability.conformal import NormalizedConformalPredictor
 from shiftguard.reliability.ood import UnfamiliarityDetector
-from shiftguard.reliability.abstain import ShiftGuardReliabilityEngine
+from shiftguard.reliability.abstain import (
+    ShiftGuardReliabilityEngine,
+    WidthOnlyEngine,
+    OodOnlyEngine,
+    RandomAbstainEngine,
+    ShiftGuardMissingAwareEngine,
+)
 from shiftguard.evaluation.metrics import evaluate_approach_on_dataset
 
 DEFAULT_SEEDS = [42, 107, 211, 313, 419, 521, 631, 733, 839, 941]
 RESULTS_DIR = Path("results")
 
 
-def aggregate_seed_metrics(seed_records: List[Dict[str, float]]) -> Dict[str, Dict[str, float]]:
-    """Aggregate metrics across multiple seeds into mean and std."""
+def aggregate_seed_metrics(seed_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Aggregate metric dictionaries across multiple seeds.
+    
+    Preserves None for non-existent metrics (e.g. coverage in point prediction models).
+    """
     if not seed_records:
         return {}
 
@@ -50,7 +64,16 @@ def aggregate_seed_metrics(seed_records: List[Dict[str, float]]) -> Dict[str, Di
     agg = {}
 
     for k in metric_keys:
-        values = [r[k] for r in seed_records if k in r and not np.isnan(r[k])]
+        # Check if values are boolean or None
+        sample_val = seed_records[0][k]
+        if sample_val is None:
+            agg[k] = None
+            continue
+        if isinstance(sample_val, bool):
+            agg[k] = any(r[k] for r in seed_records if r.get(k) is not None)
+            continue
+
+        values = [r[k] for r in seed_records if r.get(k) is not None and not np.isnan(r[k])]
         if values:
             agg[k] = {
                 "mean": float(np.mean(values)),
@@ -59,7 +82,7 @@ def aggregate_seed_metrics(seed_records: List[Dict[str, float]]) -> Dict[str, Di
                 "max": float(np.max(values)),
             }
         else:
-            agg[k] = {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
+            agg[k] = None
 
     return agg
 
@@ -72,7 +95,7 @@ def run_benchmark_suite(
     n_val: int = 600,
     n_test: int = 1200,
 ) -> Dict[str, Any]:
-    """Execute the full benchmark suite across all seeds and experimental regimes."""
+    """Execute the full benchmark suite across all seeds, approaches, and experiments."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
     experiment_keys = [
@@ -82,65 +105,67 @@ def run_benchmark_suite(
         ("exp4_temporal_drift", "Temporal Drift", True),
         ("exp5_missing_telemetry", "Missing / Delayed Telemetry", False),
         ("exp6_unfamiliar_extreme", "Unfamiliar Combinations", False),
+        ("exp7_single_matched", "Matched Severity: Single Shift", False),
+        ("exp7_compound_matched", "Matched Severity: Compound Shift", False),
     ]
 
     approach_keys = [
         ("approach1_conventional", "Conventional Model (No Warning)"),
         ("approach2_conformal", "Conformal UQ Model (Coverage Target 90%)"),
         ("approach3_shiftguard", "Proposed ShiftGuard (UQ + Unfamiliarity Abstention)"),
+        ("ablation_width_only", "Ablation: Conformal Width-Only Abstention"),
+        ("ablation_ood_only", "Ablation: Isolation Forest OOD-Only Abstention"),
+        ("ablation_random", "Control: Random Abstention (Matched Rate)"),
+        ("ablation_shiftguard_missing", "Ablation: ShiftGuard Missing-Telemetry Aware"),
     ]
 
-    # Nested tracking: [exp_key][app_key] -> list of seed metrics
-    raw_results: Dict[str, Dict[str, List[Dict[str, float]]]] = {
+    raw_results: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
         exp_k: {app_k: [] for app_k, _ in approach_keys}
         for exp_k, _, _ in experiment_keys
     }
 
-    print(f"Starting ShiftGuard-6G Benchmark Suite across {len(seeds)} random seeds...")
+    print(f"Starting ShiftGuard-6G Comprehensive Benchmark Suite ({len(seeds)} random seeds, {len(approach_keys)} approaches)...")
 
     for seed_idx, seed in enumerate(seeds):
-        print(f"  --> Seed {seed_idx + 1}/{len(seeds)} (base_seed={seed})")
+        print(f"  --> Seed {seed_idx + 1}/{len(seeds)} (seed={seed})")
 
         catalog = get_scenario_catalog(base_seed=seed)
 
-        # 1. Generate Training Data
+        # 1. Training Set (Normal calm regime)
         train_df = generate_scenario_data(catalog["train"]["normal_train"], n_samples=n_train)
 
-        # 2. Generate Held-out Calibration Data
+        # 2. Calibration Set (Normal calm regime, independent seed)
         calib_df = generate_scenario_data(catalog["calibration"]["normal_calib"], n_samples=n_calib)
 
-        # 3. Generate Validation Data (for threshold tuning strictly, no test data leakage)
+        # 3. Validation Set (Moderate shifts used strictly for threshold tuning — zero test leakage)
         val_dfs = [
             generate_scenario_data(scen, n_samples=n_val)
             for scen in catalog["validation"].values()
         ]
         val_df = pd.concat(val_dfs, ignore_index=True)
 
-        # 4. Train Models
-        # Base Model
-        base_model = BaselinePredictor(random_state=seed)
-        base_model.fit(train_df)
+        # 4. Train Models & Calibrate
+        base_model = BaselinePredictor(random_state=seed).fit(train_df)
 
-        # Conformal Predictor (Target 90% coverage)
         conformal_predictor = NormalizedConformalPredictor(base_model, alpha=0.10, random_state=seed)
-        conformal_predictor.fit_dispersion(train_df)
-        conformal_predictor.calibrate(calib_df)
+        conformal_predictor.fit_dispersion(train_df).calibrate(calib_df)
 
-        # Unfamiliarity Detector (Isolation Forest)
-        ood_detector = UnfamiliarityDetector(random_state=seed)
-        ood_detector.fit(train_df)
+        ood_detector = UnfamiliarityDetector(random_state=seed).fit(train_df)
 
-        # ShiftGuard Reliability Engine (Tuned strictly on validation data)
+        # Thresholds tuned strictly on validation set
         shiftguard_engine = ShiftGuardReliabilityEngine(conformal_predictor, ood_detector)
         shiftguard_engine.tune_thresholds_on_validation(val_df, calib_df, max_normal_abstention=0.08)
 
-        models_map = {
-            "approach1_conventional": base_model,
-            "approach2_conformal": conformal_predictor,
-            "approach3_shiftguard": shiftguard_engine,
-        }
+        width_engine = WidthOnlyEngine(conformal_predictor)
+        width_engine.tune_thresholds_on_validation(val_df, calib_df, max_normal_abstention=0.08)
 
-        # 5. Evaluate on all 6 held-out test scenarios
+        ood_engine = OodOnlyEngine(base_model, ood_detector)
+        ood_engine.tune_thresholds_on_validation(val_df, calib_df, max_normal_abstention=0.08)
+
+        missing_engine = ShiftGuardMissingAwareEngine(conformal_predictor, ood_detector)
+        missing_engine.tune_thresholds_on_validation(val_df, calib_df, max_normal_abstention=0.08)
+
+        # 5. Evaluate on all held-out test scenarios
         for exp_k, exp_label, is_drift in experiment_keys:
             scen_config = catalog["test"][exp_k]
 
@@ -149,10 +174,28 @@ def run_benchmark_suite(
             else:
                 test_df = generate_scenario_data(scen_config, n_samples=n_test)
 
-            for app_k, _ in approach_keys:
-                model_inst = models_map[app_k]
-                metrics = evaluate_approach_on_dataset(app_k, model_inst, test_df)
-                raw_results[exp_k][app_k].append(metrics)
+            # Evaluate ShiftGuard first to obtain empirical abstention rate for random control
+            m_shiftguard = evaluate_approach_on_dataset("approach3_shiftguard", shiftguard_engine, test_df)
+            sg_abstain_rate = m_shiftguard["abstention_rate"]
+
+            random_engine = RandomAbstainEngine(base_model, target_rate=sg_abstain_rate, seed=seed)
+
+            models_map = {
+                "approach1_conventional": (base_model, "approach1_conventional"),
+                "approach2_conformal": (conformal_predictor, "approach2_conformal"),
+                "approach3_shiftguard": (shiftguard_engine, "approach3_shiftguard"),
+                "ablation_width_only": (width_engine, "ablation_width_only"),
+                "ablation_ood_only": (ood_engine, "ablation_ood_only"),
+                "ablation_random": (random_engine, "ablation_random"),
+                "ablation_shiftguard_missing": (missing_engine, "ablation_shiftguard_missing"),
+            }
+
+            for app_k, (model_inst, route_name) in models_map.items():
+                if app_k == "approach3_shiftguard":
+                    raw_results[exp_k][app_k].append(m_shiftguard)
+                else:
+                    metrics = evaluate_approach_on_dataset(route_name, model_inst, test_df)
+                    raw_results[exp_k][app_k].append(metrics)
 
     # 6. Aggregate results and serialize to results/*.json
     summary_by_experiment: Dict[str, Any] = {}
@@ -176,18 +219,16 @@ def run_benchmark_suite(
                 "metrics": aggregated,
             }
 
-        # Save individual experiment JSON
         exp_filepath = output_dir / f"{exp_k}.json"
         with open(exp_filepath, "w", encoding="utf-8") as f:
             json.dump(exp_data, f, indent=2)
 
         summary_by_experiment[exp_k] = exp_data
 
-    # Save master benchmark comparison summary
     master_summary = {
         "simulated": True,
-        "benchmark_title": "ShiftGuard-6G Reliability Benchmark",
-        "timestamp_utc": pd.Timestamp.utcnow().isoformat(),
+        "benchmark_title": "ShiftGuard-6G Comprehensive Reliability Benchmark",
+        "timestamp_utc": pd.Timestamp.now("UTC").isoformat(),
         "n_seeds": len(seeds),
         "seeds": seeds,
         "experiments": summary_by_experiment,
@@ -197,7 +238,7 @@ def run_benchmark_suite(
     with open(summary_filepath, "w", encoding="utf-8") as f:
         json.dump(master_summary, f, indent=2)
 
-    print(f"Benchmark run complete. All results saved to {output_dir}/")
+    print(f"Benchmark suite execution complete. Results saved to {output_dir}/")
     return master_summary
 
 

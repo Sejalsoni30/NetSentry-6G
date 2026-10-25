@@ -47,15 +47,15 @@ def test_api_results_valid_and_missing_experiment():
 
 
 def test_api_compare_endpoint():
-    """GET /compare must return all 3 approaches side-by-side across all 6 experiments."""
+    """GET /compare must return all approaches side-by-side across all experiments."""
     response = client.get("/compare")
     assert response.status_code == 200
     data = response.json()
     assert data["simulated"] is True
     assert "comparisons" in data
-    assert len(data["comparisons"]) == 6
+    assert len(data["comparisons"]) >= 6
 
-    # Verify each comparison entry contains all 3 approaches
+    # Verify each comparison entry contains core approaches
     for comp in data["comparisons"]:
         assert "approaches" in comp
         assert "approach1_conventional" in comp["approaches"]

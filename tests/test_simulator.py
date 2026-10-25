@@ -97,3 +97,18 @@ def test_catalog_separation():
         for name, scen in scens.items():
             assert scen.seed not in all_seeds, f"Duplicate seed {scen.seed} in {split}/{name}"
             all_seeds.add(scen.seed)
+
+
+def test_severity_levels_and_matched_scenarios():
+    """Severity levels must define monotonic scales and matched severity must be in test catalog."""
+    from shiftguard.simulator.scenarios import SEVERITY_LEVELS
+    assert "mild" in SEVERITY_LEVELS
+    assert "moderate" in SEVERITY_LEVELS
+    assert "severe" in SEVERITY_LEVELS
+
+    assert SEVERITY_LEVELS["mild"]["traffic_mult"] < SEVERITY_LEVELS["moderate"]["traffic_mult"] < SEVERITY_LEVELS["severe"]["traffic_mult"]
+    assert SEVERITY_LEVELS["mild"]["interference_db"] < SEVERITY_LEVELS["moderate"]["interference_db"] < SEVERITY_LEVELS["severe"]["interference_db"]
+
+    catalog = get_scenario_catalog(base_seed=42)
+    assert "exp7_single_matched" in catalog["test"]
+    assert "exp7_compound_matched" in catalog["test"]

@@ -33,6 +33,29 @@ class Scenario:
         return asdict(self)
 
 
+# Standardized disturbance severity parameter scales
+SEVERITY_LEVELS: Dict[str, Dict[str, float]] = {
+    "mild": {
+        "traffic_mult": 1.45,
+        "handover_mult": 1.35,
+        "interference_db": 3.5,
+        "missing_rate": 0.10,
+    },
+    "moderate": {
+        "traffic_mult": 1.80,
+        "handover_mult": 1.80,
+        "interference_db": 6.5,
+        "missing_rate": 0.20,
+    },
+    "severe": {
+        "traffic_mult": 2.15,
+        "handover_mult": 2.25,
+        "interference_db": 9.5,
+        "missing_rate": 0.32,
+    },
+}
+
+
 def compute_synthetic_latency(
     load: np.ndarray,
     handovers: np.ndarray,
@@ -41,28 +64,25 @@ def compute_synthetic_latency(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Compute ground-truth non-linear latency and QoS violation.
     
-    Models M/M/1 queuing escalation, signaling handover delays, 
-    and exponential HARQ retransmission delays as SINR degrades,
-    plus heteroscedastic noise that grows with traffic load.
+    Calibrated so that nominal latency is ~25-35 ms, mild/moderate disturbances
+    induce baseline MAEs of ~10-50 ms, and severe shifts cause substantial saturation.
     """
     n_samples = len(load)
     
-    # Effective load and non-linear queue delay
     eff_load = np.clip(load, 0.05, 1.8)
-    # Spikes nonlinearly as load approaches or exceeds capacity
-    queue_delay = 16.0 * (eff_load / (1.06 - np.minimum(eff_load, 0.96))) ** 1.15
+    # Queuing delay with asymptotic saturation
+    queue_delay = 14.0 * (eff_load / (1.10 - np.minimum(eff_load, 0.95))) ** 1.12
     
-    # Handover re-authentication & buffer stall delay
+    # Handover buffer stall delay
     eff_ho = np.maximum(0.0, handovers)
-    handover_delay = 5.5 * (eff_ho ** 1.18)
+    handover_delay = 5.0 * (eff_ho ** 1.15)
     
-    # SINR retransmission delay: high SINR (> 20dB) has near 0 delay;
-    # as SINR drops below 14dB, delay spikes exponentially
-    sinr_exponent = np.clip((13.0 - sinr) / 3.2, -4.0, 3.2)
-    sinr_delay = 16.0 * np.exp(sinr_exponent)
+    # Radio interference / SINR retransmission delay
+    sinr_exponent = np.clip((13.0 - sinr) / 3.4, -4.0, 3.0)
+    sinr_delay = 12.0 * np.exp(sinr_exponent)
     
     # Heteroscedastic noise that increases with load
-    noise_std = 1.8 + 8.5 * eff_load
+    noise_std = 1.6 + 5.0 * eff_load
     noise = rng.normal(0.0, noise_std, size=n_samples)
     
     base_propagation = 10.0
@@ -82,21 +102,20 @@ def generate_scenario_data(
     rng = np.random.default_rng(scenario.seed)
     
     # 1. Base Feature Generation
-    # Load: beta-like distribution scaled by traffic_mult
+    # Load: beta distribution scaled by traffic_mult
     base_load = rng.beta(2.5, 4.0, size=n_samples) * 0.95 + 0.12
     load = np.clip(base_load * scenario.traffic_mult, 0.05, 2.2)
     
     # Handovers: Poisson with rate scaled by handover_mult
     base_ho_lambda = 1.8 * scenario.handover_mult
     handovers = rng.poisson(lam=max(0.2, base_ho_lambda), size=n_samples).astype(float)
-    # Add continuous mobility jitter
     handovers += rng.uniform(0.0, 0.4, size=n_samples)
     
-    # SINR: Gaussian with mean 23 dB minus interference_db
+    # SINR: Gaussian with mean 23.5 dB minus interference_db
     base_sinr_mean = 23.5 - scenario.interference_db
     sinr = rng.normal(loc=base_sinr_mean, scale=3.2, size=n_samples)
     
-    # 2. Ground-truth latency and label computation (based on true physical state)
+    # 2. Ground-truth latency and label computation
     latency, qos_violation = compute_synthetic_latency(load, handovers, sinr, rng)
     
     # 3. Telemetry observation and missingness simulation
@@ -110,7 +129,6 @@ def generate_scenario_data(
     
     if scenario.missing_rate > 0.0:
         rate = np.clip(scenario.missing_rate, 0.0, 0.95)
-        # Drop observations with probability missing_rate
         mask_load = rng.random(n_samples) < rate
         mask_ho = rng.random(n_samples) < rate
         mask_sinr = rng.random(n_samples) < rate
@@ -152,19 +170,16 @@ def generate_drift_scenario_data(
     """
     rng = np.random.default_rng(scenario.seed)
     
-    # Smooth progression factor alpha from 0.0 to 1.0 starting at drift_start_pct
     drift_idx = int(n_samples * drift_start_pct)
     t = np.arange(n_samples)
     alpha = np.zeros(n_samples)
     alpha[drift_idx:] = np.linspace(0.0, 1.0, n_samples - drift_idx)
     
-    # Dynamic parameter ramp
     t_mult = 1.0 + alpha * (scenario.traffic_mult - 1.0)
     ho_mult = 1.0 + alpha * (scenario.handover_mult - 1.0)
     interf = alpha * scenario.interference_db
     miss_rate = alpha * scenario.missing_rate
     
-    # Generate feature series with dynamic parameters
     base_load = rng.beta(2.5, 4.0, size=n_samples) * 0.95 + 0.12
     load = np.clip(base_load * t_mult, 0.05, 2.2)
     
@@ -246,35 +261,35 @@ def get_scenario_catalog(base_seed: int = 42) -> Dict[str, Dict[str, Scenario]]:
         )
     }
     
-    # 3. Validation set (Moderate shifts used to set abstention thresholds tau_width and tau_ood)
+    # 3. Validation set (Mild/Moderate shifts used to set abstention thresholds strictly)
     validation = {
         "val_traffic_surge": Scenario(
-            name="Validation: Traffic Surge",
-            traffic_mult=1.85,
+            name="Validation: Traffic Surge (Moderate)",
+            traffic_mult=SEVERITY_LEVELS["moderate"]["traffic_mult"],
             handover_mult=1.0,
             interference_db=0.0,
             missing_rate=0.0,
             seed=base_seed + 200,
         ),
         "val_interference": Scenario(
-            name="Validation: Radio Interference",
+            name="Validation: Radio Interference (Moderate)",
             traffic_mult=1.0,
             handover_mult=1.0,
-            interference_db=7.5,
+            interference_db=SEVERITY_LEVELS["moderate"]["interference_db"],
             missing_rate=0.0,
             seed=base_seed + 201,
         ),
         "val_missing_telemetry": Scenario(
-            name="Validation: Telemetry Loss",
+            name="Validation: Telemetry Loss (Moderate)",
             traffic_mult=1.0,
             handover_mult=1.0,
             interference_db=0.0,
-            missing_rate=0.18,
+            missing_rate=SEVERITY_LEVELS["moderate"]["missing_rate"],
             seed=base_seed + 202,
         ),
     }
     
-    # 4. Final Test Scenarios (The 6 benchmark experiments — strictly held out)
+    # 4. Final Test Scenarios (The benchmark experiments — strictly held out)
     test = {
         # Exp 1: Normal conditions (baseline test)
         "exp1_normal": Scenario(
@@ -285,50 +300,67 @@ def get_scenario_catalog(base_seed: int = 42) -> Dict[str, Dict[str, Scenario]]:
             missing_rate=0.0,
             seed=base_seed + 301,
         ),
-        # Exp 2: One condition changes (isolated traffic surge)
+        # Exp 2: One condition changes (moderate traffic surge)
         "exp2_single_shift": Scenario(
             name="Exp 2: Single Shift (Traffic Surge)",
-            traffic_mult=2.1,
+            traffic_mult=SEVERITY_LEVELS["moderate"]["traffic_mult"],
             handover_mult=1.0,
             interference_db=0.0,
             missing_rate=0.0,
             seed=base_seed + 302,
         ),
-        # Exp 3: Multiple conditions change together (compound surge + interference + handovers)
+        # Exp 3: Multiple conditions change together (compound shift)
         "exp3_compound_shift": Scenario(
             name="Exp 3: Compound Shift (Surge + Noise + Handovers)",
-            traffic_mult=2.0,
-            handover_mult=2.4,
-            interference_db=8.5,
+            traffic_mult=1.70,
+            handover_mult=1.75,
+            interference_db=6.0,
             missing_rate=0.0,
             seed=base_seed + 303,
         ),
         # Exp 4: Conditions change over time (drift)
         "exp4_temporal_drift": Scenario(
             name="Exp 4: Temporal Drift",
-            traffic_mult=2.4,
-            handover_mult=2.5,
-            interference_db=9.5,
-            missing_rate=0.20,
+            traffic_mult=1.90,
+            handover_mult=1.90,
+            interference_db=7.0,
+            missing_rate=0.15,
             seed=base_seed + 304,
         ),
         # Exp 5: Incomplete telemetry (missing or delayed measurements)
         "exp5_missing_telemetry": Scenario(
-            name="Exp 5: Incomplete Telemetry (30% Loss)",
-            traffic_mult=1.2,
-            handover_mult=1.2,
-            interference_db=2.0,
-            missing_rate=0.30,
+            name="Exp 5: Incomplete Telemetry (Moderate 20% Loss)",
+            traffic_mult=1.15,
+            handover_mult=1.15,
+            interference_db=1.5,
+            missing_rate=0.20,
             seed=base_seed + 305,
         ),
-        # Exp 6: Unfamiliar combinations (extreme out-of-distribution)
+        # Exp 6: Unfamiliar combinations (severe out-of-distribution)
         "exp6_unfamiliar_extreme": Scenario(
-            name="Exp 6: Unfamiliar Combinations (Extreme Epistemic Stress)",
-            traffic_mult=2.7,
-            handover_mult=3.2,
-            interference_db=13.0,
-            missing_rate=0.35,
+            name="Exp 6: Unfamiliar Combinations (Severe Multi-Axis Stress)",
+            traffic_mult=SEVERITY_LEVELS["severe"]["traffic_mult"],
+            handover_mult=SEVERITY_LEVELS["severe"]["handover_mult"],
+            interference_db=SEVERITY_LEVELS["severe"]["interference_db"],
+            missing_rate=SEVERITY_LEVELS["severe"]["missing_rate"],
             seed=base_seed + 306,
+        ),
+        # Exp 7: Matched-Severity Single vs Compound Comparison (total budget S = 0.60)
+        "exp7_single_matched": Scenario(
+            name="Exp 7a: Matched Severity Single Shift (Traffic 1.6x)",
+            traffic_mult=1.60,
+            handover_mult=1.0,
+            interference_db=0.0,
+            missing_rate=0.0,
+            seed=base_seed + 307,
+        ),
+        "exp7_compound_matched": Scenario(
+            name="Exp 7b: Matched Severity Compound Shift (Distributed 0.20 per axis)",
+            traffic_mult=1.20,
+            handover_mult=1.30,
+            interference_db=2.0,
+            missing_rate=0.0,
+            seed=base_seed + 308,
         ),
     }
     
