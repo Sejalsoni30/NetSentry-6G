@@ -355,10 +355,11 @@ export const PhasedArrayCenterpiece: React.FC<PhasedArrayCenterpieceProps> = ({
 
         {/* Glowing sub-atomic point at the center */}
         <mesh>
-          <sphereGeometry args={[0.18, 16, 16]} />
+          <sphereGeometry args={[0.07, 12, 12]} />
           <meshBasicMaterial
-            color="#FFFFFF"
-            toneMapped={false}
+            color={isDisturbed ? amberColor : cyanColor}
+            transparent
+            opacity={0.65}
           />
         </mesh>
       </group>

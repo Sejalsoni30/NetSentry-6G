@@ -180,8 +180,9 @@ export const ObservatoryCanvas: React.FC = () => {
   // Entrance iris open factor: 0 during preloader, 1 once entering hero
   const entranceIrisOpen = isPreloaderComplete ? (activeSection >= 1 ? 1 : 0.1) : 0;
 
-  // Telemetry curtain parts when approaching section 3
+  // Telemetry curtain parts when approaching section 3 and is only visible near Section 3
   const curtainParted = activeSection >= 3 ? 1 : 0.05;
+  const curtainOpacity = activeSection === 3 ? 0.6 : activeSection === 2 ? 0.15 : 0;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-navy-950">
@@ -225,8 +226,8 @@ export const ObservatoryCanvas: React.FC = () => {
 
         {/* Hero & Observatory Centerpiece: 3D 6G Phased-Array Antenna & Holographic Core */}
         <PhasedArrayCenterpiece
-          position={[0, 0, 0.4]}
-          scale={0.95}
+          position={[0, 0.25, -0.8]}
+          scale={0.9}
         />
 
         {/* Scenes 1-2: 3D 6G Network Node Lattice with Radar Wavefront */}
@@ -236,6 +237,7 @@ export const ObservatoryCanvas: React.FC = () => {
         <TelemetryCurtain3D
           position={[0, 0, -10]}
           partFactor={curtainParted}
+          opacity={curtainOpacity}
           width={18}
           height={14}
           lineCount={quality === 'high' ? 75 : 40}

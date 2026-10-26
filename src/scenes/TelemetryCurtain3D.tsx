@@ -5,6 +5,7 @@ import * as THREE from 'three';
 interface TelemetryCurtain3DProps {
   position?: [number, number, number];
   partFactor: number; // 0 = closed curtain, 1 = parted curtain
+  opacity?: number;
   width?: number;
   height?: number;
   lineCount?: number;
@@ -13,6 +14,7 @@ interface TelemetryCurtain3DProps {
 export const TelemetryCurtain3D: React.FC<TelemetryCurtain3DProps> = ({
   position = [0, 0, 0],
   partFactor,
+  opacity = 0.55,
   width = 18,
   height = 14,
   lineCount = 75,
@@ -125,6 +127,8 @@ export const TelemetryCurtain3D: React.FC<TelemetryCurtain3DProps> = ({
     }
   });
 
+  if (opacity <= 0.001) return null;
+
   return (
     <group position={position}>
       {/* 1. HORIZONTAL BLUEPRINT FREQUENCY GRATICULE */}
@@ -138,7 +142,7 @@ export const TelemetryCurtain3D: React.FC<TelemetryCurtain3DProps> = ({
         <lineBasicMaterial
           color="#00F0FF"
           transparent
-          opacity={0.12}
+          opacity={opacity * 0.25}
         />
       </lineSegments>
 
@@ -153,7 +157,7 @@ export const TelemetryCurtain3D: React.FC<TelemetryCurtain3DProps> = ({
         <lineBasicMaterial
           color="#00F0FF"
           transparent
-          opacity={0.55}
+          opacity={opacity}
           blending={THREE.AdditiveBlending}
         />
       </lineSegments>
