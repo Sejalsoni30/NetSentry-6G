@@ -73,7 +73,8 @@ export const SITE_CONTENT = {
     disclaimer: "Research project in progress. Synthetic results are labeled as simulated.",
     illustrativeBadge: "Illustrative design only — no real results yet.",
     links: {
-      github: "https://github.com/example/shiftguard-6g",
+      github: "https://github.com/Sejalsoni30",
+      linkedin: "https://www.linkedin.com/in/sejal-soni-361897303/",
       researchPlan: "#roadmap",
       documentation: "#experiments",
     }
@@ -452,7 +453,7 @@ export const SITE_CONTENT = {
     subline: "Synthetic results will always be labeled as simulated.",
     secondaryText: "ShiftGuard-6G is designed to transform black-box predictive confidence into transparent, safety-critical awareness under harsh wireless realities.",
     ctas: [
-      { label: "View on GitHub", href: "https://github.com/example/shiftguard-6g", primary: true },
+      { label: "View on GitHub", href: "https://github.com/Sejalsoni30", primary: true },
       { label: "Read the Research Plan", href: "#roadmap", primary: false }
     ],
     statusStamp: "SYSTEM CALIBRATED // SHIFT GATE OPERATIONAL"
